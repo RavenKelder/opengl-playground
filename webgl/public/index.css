@@ -1,0 +1,12 @@
+/* Add CSS styles here! */
+body {
+  font-family: sans-serif;
+}
+
+div#canvasContainer {
+  display: flex;
+}
+
+canvas#glCanvas {
+  margin: auto;
+}

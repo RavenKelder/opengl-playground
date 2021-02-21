@@ -10,7 +10,7 @@ export class BedheadAttractor extends Vector {
   xOffset: number = 0;
   yOffset: number = 0;
 
-  constructor(a: number, b: number) {
+  constructor(a: number = -0.81, b: number = -0.92) {
     super();
     this.a = a;
     this.b = b;
@@ -20,18 +20,13 @@ export class BedheadAttractor extends Vector {
 
   coordinate(): [number, number, number] {
     const { a, b, x, y, xOffset, yOffset } = this;
-    var xNew =
-      Math.sin((x * y) / b) + Math.cos(a * x - y);
+    var xNew = Math.sin((x * y) / b) + Math.cos(a * x - y);
     var yNew = x + Math.sin(y) / b;
 
     this.x = xNew;
     this.y = yNew;
 
-    var z =
-      0.2 * Math.sin(xNew * Math.PI * 4) +
-      0.2 * Math.sin(yNew * Math.PI * 4);
-
-    return [xNew + xOffset, yNew + yOffset, z];
+    return [xNew + xOffset, yNew + yOffset, 0];
   }
 }
 
@@ -44,11 +39,7 @@ export class LorenzAttractor extends Vector {
   b: number;
   dt: number = 0.01;
 
-  constructor(
-    s: number = 10.0,
-    r: number = 28.0,
-    b: number = 2.667
-  ) {
+  constructor(s: number = 10.0, r: number = 28.0, b: number = 2.667) {
     super();
     this.x = 0.0;
     this.y = 1.0;
@@ -68,8 +59,10 @@ export class LorenzAttractor extends Vector {
     this.y = y + yNew * dt;
     this.z = z + zNew * dt;
 
-    return [this.x, this.y, this.z].map(
-      (e) => e * 0.1
-    ) as [number, number, number];
+    return [this.x, this.y, this.z].map((e) => e * 0.1) as [
+      number,
+      number,
+      number
+    ];
   }
 }
