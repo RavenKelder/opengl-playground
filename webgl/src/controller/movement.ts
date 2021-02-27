@@ -39,7 +39,7 @@ export class Movement {
   };
 
   acceleration: number = 0.0002;
-  rotationAcceleration: number = 0.0001;
+  rotationAcceleration: number = 0.0005;
   maxSpeed: number = 0.03;
   friction: number = 0.99;
 

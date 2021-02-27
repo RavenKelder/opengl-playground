@@ -18,7 +18,7 @@ export class Camera {
   transformation: Transformation = defaultTransformation;
 
   eye: vec3;
-  lookingAt: vec3 = [0, 0, 0];
+  lookingAt: vec3;
 
   eyeCoordinate: {
     u: vec3;
@@ -31,6 +31,7 @@ export class Camera {
     transformation?: Partial<Transformation>;
   }) {
     this.eye = [0, 0, -1];
+    this.lookingAt = vec3.add(vec3.create(), this.eye, [0, 0, 1]);
 
     this.eyeCoordinate = {
       u: [1, 0, 0],
