@@ -1,5 +1,6 @@
 export default {
   page: {
+    CANVAS_CONTAINER_ID: "canvasContainer",
     CANVAS_ID: "glCanvas",
   },
   shaders: {

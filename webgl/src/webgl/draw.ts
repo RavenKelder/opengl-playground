@@ -2,7 +2,7 @@ import config from "../config";
 import { Camera } from "./camera";
 
 export class Display {
-  program: WebGLProgram;
+  program!: WebGLProgram;
   context: WebGLRenderingContext;
   camera: Camera;
 
@@ -29,16 +29,8 @@ export class Display {
     },
     camera: Camera
   ) {
-    this.createProgram.bind(this);
-    this.drawVertices.bind(this);
-    this._loadShader.bind(this);
-
     this.context = context;
-    this.program = this.createProgram(
-      this,
-      shaders.vertexSource,
-      shaders.fragmentSource
-    );
+    this.createProgram(shaders.vertexSource, shaders.fragmentSource);
 
     var errors: string[] = [];
 
@@ -103,31 +95,24 @@ export class Display {
       pointSize: uniformLocationObjects[1] as WebGLUniformLocation,
     };
 
-    if (camera) {
-      this.camera = camera;
-    } else {
-      this.camera = new Camera();
-    }
+    this.camera = camera;
 
     this.ready = true;
   }
 
   createProgram(
-    self: Display,
     vertexShaderSource: string,
     fragmentShaderSource: string
-  ): WebGLProgram {
-    self.ready = false;
+  ): void {
+    this.ready = false;
 
-    const { context, _loadShader } = self;
-    const vertexShader = _loadShader(
-      self,
+    const { context, _loadShader } = this;
+    const vertexShader = this._loadShader(
       context.VERTEX_SHADER,
       vertexShaderSource
     );
 
-    const fragmentShader = _loadShader(
-      self,
+    const fragmentShader = this._loadShader(
       context.FRAGMENT_SHADER,
       fragmentShaderSource
     );
@@ -148,21 +133,19 @@ export class Display {
       );
 
       context.deleteProgram(newProgram);
-      context.linkProgram(self.program);
-      self.ready = true;
+      context.linkProgram(this.program);
+      this.ready = true;
       throw error;
     }
 
-    context.deleteProgram(self.program);
+    context.deleteProgram(this.program);
 
-    self.program = newProgram;
-    self.ready = true;
-
-    return newProgram;
+    this.program = newProgram;
+    this.ready = true;
   }
 
-  _loadShader(self: Display, type: number, source: string): WebGLShader {
-    const { context } = self;
+  _loadShader(type: number, source: string): WebGLShader {
+    const { context } = this;
     const shader = context.createShader(type);
 
     if (!shader) {
@@ -184,22 +167,21 @@ export class Display {
     return shader;
   }
 
-  setVertexSize(self: Display, val: number): boolean {
+  setVertexSize(val: number): boolean {
     if (val < 0) {
       return false;
     }
 
-    self.vertexSize = val;
+    this.vertexSize = val;
     return true;
   }
 
   drawVertices(
-    self: Display,
     vertices: WebGLBuffer,
     vectorSize: 1 | 2 | 3,
     bufferSize: number
   ): boolean {
-    if (!self.ready) {
+    if (!this.ready) {
       return false;
     }
 
@@ -210,7 +192,7 @@ export class Display {
       vertexSize,
       attrLocations,
       uniformLocations,
-    } = self;
+    } = this;
 
     context.clearColor(0.0, 0.0, 0.0, 1.0);
     context.clearDepth(1.0);
@@ -241,7 +223,7 @@ export class Display {
     context.uniformMatrix4fv(
       uniformLocations.viewMatrix,
       false,
-      camera.transformationMatrix
+      camera.updateTransformation()
     );
 
     const clock = (new Date().getTime() % 10000) / 10000;

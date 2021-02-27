@@ -17,7 +17,7 @@ export function generate(
     numberOfVectors: vectorsPerBuffer,
   };
 
-  const vector = new BedheadAttractor();
+  const vector = new LorenzAttractor();
   var index = 0;
 
   controller.addEventListener("stop", () => {
@@ -44,6 +44,7 @@ export function generate(
 
       if (generatedValues > vectorArray.buffer.length) {
         controller.dispatchEvent(new Event("start"));
+        // halt = true;
       }
 
       await new Promise((res) => setTimeout(res, iterationDelay));

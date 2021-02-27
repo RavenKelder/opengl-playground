@@ -1,4 +1,4 @@
-import { mat4 } from "gl-matrix";
+import { mat4, vec3 } from "gl-matrix";
 
 const defaultPerspective: Perspective = {
   fieldOfView: (45 / 180) * Math.PI,
@@ -12,21 +12,50 @@ const defaultTransformation: Transformation = {
 };
 
 export class Camera {
-  perspectiveMatrix: mat4;
-  transformationMatrix: mat4;
+  perspectiveMatrix!: mat4;
 
-  rotation: [number, number, number];
-  translation: [number, number, number];
+  perspective: Perspective = defaultPerspective;
+  transformation: Transformation = defaultTransformation;
+
+  eye: vec3;
+  lookingAt: vec3 = [0, 0, 0];
+
+  eyeCoordinate: {
+    u: vec3;
+    v: vec3;
+    n: vec3;
+  };
 
   constructor(options?: {
     perspective?: Partial<Perspective>;
     transformation?: Partial<Transformation>;
   }) {
+    this.eye = [0, 0, -6];
+
+    this.eyeCoordinate = {
+      u: [1, 0, 0],
+      v: [0, 1, 0],
+      n: [0, 0, 1],
+    };
+
+    this.perspectiveMatrix = mat4.create();
+
+    this.updatePerspective(options?.perspective ?? defaultPerspective);
+    this.updateTransformation();
+  }
+
+  updatePerspective(perspective: Partial<Perspective>): mat4 {
     const [fieldOfView, aspectRatio, viewRange] = [
-      options?.perspective?.fieldOfView ?? defaultPerspective.fieldOfView,
-      options?.perspective?.aspectRatio ?? defaultPerspective.aspectRatio,
-      options?.perspective?.viewRange ?? defaultPerspective.viewRange,
+      perspective?.fieldOfView ?? this.perspective.fieldOfView,
+      perspective?.aspectRatio ?? this.perspective.aspectRatio,
+      perspective?.viewRange ?? this.perspective.viewRange,
     ];
+
+    this.perspective = {
+      fieldOfView,
+      aspectRatio,
+      viewRange,
+    };
 
     this.perspectiveMatrix = mat4.create();
     this.perspectiveMatrix = mat4.perspective(
@@ -37,35 +66,27 @@ export class Camera {
       viewRange[1]
     );
 
-    const [translation, rotation] = [
-      options?.transformation?.translation ?? defaultTransformation.translation,
-      options?.transformation?.rotation ?? defaultTransformation.rotation,
-    ];
+    return this.perspectiveMatrix;
+  }
 
-    this.translation = translation;
-    this.rotation = rotation;
+  updateTransformation(): mat4 {
+    const { eye, lookingAt } = this;
+    const { u, v, n } = this.eyeCoordinate;
 
-    this.transformationMatrix = mat4.create();
-    this.transformationMatrix = mat4.translate(
-      this.transformationMatrix,
-      this.transformationMatrix,
-      translation
-    );
-    this.transformationMatrix = mat4.rotateX(
-      this.transformationMatrix,
-      this.transformationMatrix,
-      rotation[0]
-    );
-    this.transformationMatrix = mat4.rotateY(
-      this.transformationMatrix,
-      this.transformationMatrix,
-      rotation[1]
-    );
-    this.transformationMatrix = mat4.rotateZ(
-      this.transformationMatrix,
-      this.transformationMatrix,
-      rotation[2]
-    );
+    var m = mat4.create();
+
+    m = mat4.lookAt(m, eye, lookingAt, v);
+
+    var newN = vec3.subtract(vec3.create(), lookingAt, eye);
+    newN = vec3.normalize(newN, newN);
+    this.eyeCoordinate.n = newN;
+
+    var newU = vec3.create();
+    vec3.cross(newU, v, this.eyeCoordinate.n);
+    vec3.normalize(newU, newU);
+    this.eyeCoordinate.u = newU;
+
+    return m;
   }
 }
 
@@ -79,3 +100,6 @@ export interface Transformation {
   translation: [number, number, number];
   rotation: [number, number, number];
 }
+
+const camera = new Camera();
+export { camera };
