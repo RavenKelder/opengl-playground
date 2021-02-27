@@ -25,9 +25,28 @@ function main() {
     const renderer = new Renderer(canvas, camera, 60, vectorArray);
     const movement = new Movement(canvasContainer, camera, 100);
 
+    const onResize = () => {
+      const width = window.innerWidth - 50;
+      const height = window.innerHeight - 50;
+      canvas.style.width = `${width.toString()}px`;
+      canvas.style.height = `${height.toString()}px`;
+
+      canvas.width = width;
+      canvas.height = height;
+
+      renderer.display.context.viewport(0, 0, width, height);
+
+      camera.updatePerspective({
+        aspectRatio: canvas.clientWidth / canvas.clientHeight,
+      });
+    };
+
+    window.onresize = onResize;
+
     controller.addEventListener("start", () => {
       renderer.start();
       movement.start();
+      onResize();
     });
 
     controller.addEventListener("stop", () => {

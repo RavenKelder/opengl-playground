@@ -5,29 +5,43 @@ export class Movement {
   element: HTMLElement;
   camera: Camera;
   velocity: vec3;
+  rotation: vec3 = [0, 0, 0];
   enabled: boolean = false;
   unitsPerSecond: number;
 
   moving: vec3;
   isPressed: {
-    w: boolean;
-    a: boolean;
-    s: boolean;
-    d: boolean;
-    e: boolean;
-    c: boolean;
+    moveForward: boolean;
+    moveLeft: boolean;
+    moveBack: boolean;
+    moveRight: boolean;
+    moveUp: boolean;
+    moveDown: boolean;
+    yawLeft: boolean;
+    yawRight: boolean;
+    pitchUp: boolean;
+    pitchDown: boolean;
+    rollLeft: boolean;
+    rollRight: boolean;
   } = {
-    w: false,
-    a: false,
-    s: false,
-    d: false,
-    e: false,
-    c: false,
+    moveForward: false,
+    moveLeft: false,
+    moveBack: false,
+    moveRight: false,
+    moveUp: false,
+    moveDown: false,
+    yawLeft: false,
+    yawRight: false,
+    pitchUp: false,
+    pitchDown: false,
+    rollLeft: false,
+    rollRight: false,
   };
 
-  acceleration: number = 0.01;
+  acceleration: number = 0.0002;
+  rotationAcceleration: number = 0.0001;
   maxSpeed: number = 0.03;
-  friction: number = 0.8;
+  friction: number = 0.99;
 
   constructor(element: HTMLElement, camera: Camera, unitsPerSecond: number) {
     this.element = element;
@@ -41,58 +55,84 @@ export class Movement {
       event.preventDefault();
       switch (event.key) {
         case "d":
-          this.isPressed.d = true;
+          this.isPressed.moveRight = true;
           break;
         case "a":
-          this.isPressed.a = true;
+          this.isPressed.moveLeft = true;
           break;
         case "w":
-          this.isPressed.w = true;
+          this.isPressed.moveForward = true;
           break;
         case "s":
-          this.isPressed.s = true;
+          this.isPressed.moveBack = true;
           break;
-        case "e":
-          this.isPressed.e = true;
-          break;
-        case "c":
-          this.isPressed.c = true;
+        case " ":
+          this.isPressed.moveUp = true;
           break;
         case "Shift":
-          this.maxSpeed = 0.01;
+          this.isPressed.moveDown = true;
+          break;
+        case "ArrowLeft":
+          this.isPressed.yawLeft = true;
+          break;
+        case "ArrowRight":
+          this.isPressed.yawRight = true;
+          break;
+        case "ArrowUp":
+          this.isPressed.pitchUp = true;
+          break;
+        case "ArrowDown":
+          this.isPressed.pitchDown = true;
+          break;
+        case "q":
+          this.isPressed.rollLeft = true;
+          break;
+        case "e":
+          this.isPressed.rollRight = true;
           break;
       }
-
-      console.log("down", event.key);
     });
 
     element.addEventListener("keyup", (event) => {
       event.preventDefault();
       switch (event.key) {
         case "d":
-          this.isPressed.d = false;
+          this.isPressed.moveRight = false;
           break;
         case "a":
-          this.isPressed.a = false;
+          this.isPressed.moveLeft = false;
           break;
         case "w":
-          this.isPressed.w = false;
+          this.isPressed.moveForward = false;
           break;
         case "s":
-          this.isPressed.s = false;
+          this.isPressed.moveBack = false;
           break;
-        case "e":
-          this.isPressed.e = false;
-          break;
-        case "c":
-          this.isPressed.c = false;
+        case " ":
+          this.isPressed.moveUp = false;
           break;
         case "Shift":
-          this.maxSpeed = 0.03;
+          this.isPressed.moveDown = false;
+          break;
+        case "ArrowLeft":
+          this.isPressed.yawLeft = false;
+          break;
+        case "ArrowRight":
+          this.isPressed.yawRight = false;
+          break;
+        case "ArrowUp":
+          this.isPressed.pitchUp = false;
+          break;
+        case "ArrowDown":
+          this.isPressed.pitchDown = false;
+          break;
+        case "q":
+          this.isPressed.rollLeft = false;
+          break;
+        case "e":
+          this.isPressed.rollRight = false;
           break;
       }
-
-      console.log("up", event.key);
     });
   }
 
@@ -106,54 +146,10 @@ export class Movement {
     (async () => {
       while (this.enabled) {
         this.updateMovement();
-        this.camera.eye = vec3.add(
-          this.camera.eye,
-          this.camera.eye,
-          this.velocity
-        );
-
-        var n = vec3.dot(
-          this.velocity,
-          vec3.normalize(
-            this.camera.eyeCoordinate.n,
-            this.camera.eyeCoordinate.n
-          )
-        );
-
-        this.camera.lookingAt = vec3.add(
-          this.camera.lookingAt,
-          this.camera.lookingAt,
-          vec3.scale(vec3.create(), this.camera.eyeCoordinate.n, n)
-        );
-
-        var u = vec3.dot(
-          this.velocity,
-          vec3.normalize(
-            this.camera.eyeCoordinate.u,
-            this.camera.eyeCoordinate.u
-          )
-        );
-
-        this.camera.lookingAt = vec3.add(
-          this.camera.lookingAt,
-          this.camera.lookingAt,
-          vec3.scale(vec3.create(), this.camera.eyeCoordinate.u, u)
-        );
-
-        var v = vec3.dot(
-          this.velocity,
-          vec3.normalize(
-            this.camera.eyeCoordinate.v,
-            this.camera.eyeCoordinate.v
-          )
-        );
-
-        this.camera.lookingAt = vec3.add(
-          this.camera.lookingAt,
-          this.camera.lookingAt,
-          vec3.scale(vec3.create(), this.camera.eyeCoordinate.v, v)
-        );
-
+        this.camera.move(this.velocity);
+        this.camera.rotate(this.rotation[0], "u");
+        this.camera.rotate(this.rotation[1], "v");
+        this.camera.rotate(this.rotation[2], "n");
         await new Promise((res) => setTimeout(res, 1000 / this.unitsPerSecond));
       }
     })();
@@ -170,14 +166,22 @@ export class Movement {
   }
 
   updateMovement() {
-    var movementU = 0;
-    const { w, a, s, d, e, c } = this.isPressed;
-    if (a) {
-      movementU = movementU + this.acceleration;
-    }
-    if (d) {
-      movementU = movementU - this.acceleration;
-    }
+    const {
+      moveForward: w,
+      moveLeft: a,
+      moveBack: s,
+      moveRight: d,
+      moveUp: e,
+      moveDown: c,
+      yawLeft: left,
+      yawRight: right,
+      pitchUp: up,
+      pitchDown: down,
+      rollLeft,
+      rollRight,
+    } = this.isPressed;
+
+    var movementU = (a ? this.acceleration : 0) - (d ? this.acceleration : 0);
     this.move(movementU, "u");
 
     var movementN = (w ? this.acceleration : 0) - (s ? this.acceleration : 0);
@@ -190,6 +194,28 @@ export class Movement {
       this.velocity[0] * this.friction,
       this.velocity[1] * this.friction,
       this.velocity[2] * this.friction,
+    ];
+
+    var rotateV =
+      (left ? this.rotationAcceleration : 0) -
+      (right ? this.rotationAcceleration : 0);
+    var rotateU =
+      (up ? this.rotationAcceleration : 0) -
+      (down ? this.rotationAcceleration : 0);
+    const rotateN =
+      (rollRight ? this.rotationAcceleration : 0) -
+      (rollLeft ? this.rotationAcceleration : 0);
+
+    this.rotation = [
+      this.rotation[0] + rotateU,
+      this.rotation[1] + rotateV,
+      this.rotation[2] + rotateN,
+    ];
+
+    this.rotation = [
+      this.rotation[0] * this.friction,
+      this.rotation[1] * this.friction,
+      this.rotation[2] * this.friction,
     ];
   }
 

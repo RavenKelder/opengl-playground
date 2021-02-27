@@ -193,7 +193,6 @@ export class Display {
       attrLocations,
       uniformLocations,
     } = this;
-
     context.clearColor(0.0, 0.0, 0.0, 1.0);
     context.clearDepth(1.0);
     context.enable(context.DEPTH_TEST);

@@ -1,4 +1,4 @@
-import { mat4, vec3 } from "gl-matrix";
+import { mat4, vec3, vec4 } from "gl-matrix";
 
 const defaultPerspective: Perspective = {
   fieldOfView: (45 / 180) * Math.PI,
@@ -30,7 +30,7 @@ export class Camera {
     perspective?: Partial<Perspective>;
     transformation?: Partial<Transformation>;
   }) {
-    this.eye = [0, 0, -6];
+    this.eye = [0, 0, -1];
 
     this.eyeCoordinate = {
       u: [1, 0, 0],
@@ -66,6 +66,8 @@ export class Camera {
       viewRange[1]
     );
 
+    console.log(this.perspective.aspectRatio);
+
     return this.perspectiveMatrix;
   }
 
@@ -86,7 +88,67 @@ export class Camera {
     vec3.normalize(newU, newU);
     this.eyeCoordinate.u = newU;
 
+    var newV = vec3.create();
+    vec3.cross(newV, newN, newU);
+    vec3.normalize(newV, newV);
+    this.eyeCoordinate.v = newV;
+
     return m;
+  }
+
+  move(vector: vec3) {
+    this.eye = vec3.add(this.eye, this.eye, vector);
+
+    this.lookingAt = vec3.add(this.lookingAt, this.lookingAt, vector);
+  }
+
+  rotate(amount: number, direction: "u" | "v" | "n") {
+    if (Math.abs(amount) < 0.0000001) {
+      return;
+    }
+    const { lookingAt, eye } = this;
+    const { v } = this.eyeCoordinate;
+    const rotateAround = mat4.rotate(
+      mat4.create(),
+      mat4.create(),
+      amount,
+      this.eyeCoordinate[direction]
+    );
+
+    // If rotating through n vector, only the v vector needs to be
+    // rotated, as the updateTransformation function already updates the
+    // rest of the coordinates based on v. This is safe as long as change
+    // in v is small (i.e. it does not become parallel to n).
+    // TODO: fix this problem accordingly
+    if (direction === "n") {
+      const rotation = vec4.transformMat4(
+        vec4.create(),
+        vec4.set(vec4.create(), v[0], v[1], v[2], 1),
+        rotateAround
+      );
+
+      this.eyeCoordinate.v = [rotation[0], rotation[1], rotation[2]];
+      return;
+    }
+
+    const originLookingAt = vec3.subtract(vec3.create(), lookingAt, eye);
+    const newLookingAt = vec4.transformMat4(
+      vec4.create(),
+      vec4.set(
+        vec4.create(),
+        originLookingAt[0],
+        originLookingAt[1],
+        originLookingAt[2],
+        1
+      ),
+      rotateAround
+    );
+
+    this.lookingAt = vec3.add(
+      vec3.create(),
+      [newLookingAt[0], newLookingAt[1], newLookingAt[2]],
+      eye
+    );
   }
 }
 
