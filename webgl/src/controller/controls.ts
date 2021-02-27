@@ -1,6 +1,7 @@
 import { mat4 } from "gl-matrix";
 import { camera } from "../index";
 import { Camera } from "../webgl/camera";
+import { clock } from "./clock";
 
 var sensitivity = {
   x: Math.PI / 240,
@@ -10,8 +11,60 @@ var sensitivity = {
 
 var movementSpeed = 0.03;
 
+var movement = {
+  x: 0,
+  y: 0,
+  z: 0,
+};
+
+const gravity = 0.0005;
+var jumpCount = 0;
+const maxJumps = 3;
+
+const friction = 0.9;
+const airResistance = 0.99;
+
+clock.addEventListener("tick", () => {
+  if (camera) {
+    move(camera, movement.x, "x");
+    move(camera, movement.y, "y");
+    move(camera, movement.z, "z");
+  }
+
+  movement.x = movement.x * friction;
+  movement.y = movement.y * airResistance;
+  movement.z = movement.z * friction;
+
+  if (camera) {
+    if (camera.translation[1] < 0) {
+      movement.y = movement.y + gravity;
+    } else {
+      movement.y = 0;
+    }
+  }
+
+  if (Math.abs(movement.y) < 0.001) {
+    jumpCount = 0;
+  }
+});
+
+clock.start();
+
 document.addEventListener("keydown", (event) => {
   switch (event.key) {
+    case " ":
+      if (jumpCount < maxJumps) {
+        movement.y = -0.01;
+        jumpCount++;
+      }
+      break;
+    case "x":
+      if (clock.enabled) {
+        clock.stop();
+      } else {
+        clock.start();
+      }
+      break;
     case ".":
       break;
     case ",":
@@ -29,24 +82,30 @@ document.addEventListener("keydown", (event) => {
       rotate(camera, sensitivity.y, "y");
       break;
     case "a":
-      move(camera, movementSpeed, "x");
+      movement.x = movement.x + 0.01;
       break;
     case "d":
-      move(camera, -movementSpeed, "x");
+      movement.x = movement.x - 0.01;
       break;
     case "w":
-      move(camera, -movementSpeed, "y");
+      movement.z = movement.z + 0.01;
       break;
     case "s":
-      move(camera, movementSpeed, "y");
+      movement.z = movement.z - 0.01;
       break;
     case "e":
-      move(camera, movementSpeed, "z");
+      movement.y = movement.y - 0.01;
       break;
-    case "q":
-      move(camera, -movementSpeed, "z");
+    case "c":
+      movement.y = movement.y + 0.01;
     default:
       console.log(event.key);
+  }
+});
+
+document.addEventListener("keyup", (event) => {
+  switch (event.key) {
+    case "d":
   }
 });
 
@@ -113,3 +172,5 @@ function rotate(camera: Camera, amount: number, axis: "x" | "y" | "z") {
     translation
   );
 }
+
+class MovementController extends EventTarget {}

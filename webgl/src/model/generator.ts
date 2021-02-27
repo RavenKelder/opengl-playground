@@ -17,7 +17,7 @@ export function generate(
     numberOfVectors: vectorsPerBuffer,
   };
 
-  const vector = new LorenzAttractor();
+  const vector = new BedheadAttractor();
   var index = 0;
 
   controller.addEventListener("stop", () => {
