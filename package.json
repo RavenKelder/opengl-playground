@@ -6,6 +6,7 @@
   },
   "devDependencies": {
     "@types/gl-matrix": "^3.2.0",
+    "prettier": "^2.2.1",
     "snowpack": "^3.0.1",
     "snowpack-plugin-glslify": "^1.0.0",
     "typescript": "^4.1.5"

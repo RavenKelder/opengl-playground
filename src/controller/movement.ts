@@ -2,6 +2,9 @@ import { vec3 } from "gl-matrix";
 import { Camera } from "../webgl/camera";
 import { Clock, ClockEvent } from "./clock";
 
+/**
+ * Movement assigns event listeners to enable movement of a Camera
+ */
 export class Movement {
   element: HTMLElement;
   camera: Camera;
@@ -53,15 +56,19 @@ export class Movement {
     element.addEventListener("keydown", (event) => {
       event.preventDefault();
       switch (event.key) {
+        case "D":
         case "d":
           this.isPressed.moveRight = true;
           break;
+        case "A":
         case "a":
           this.isPressed.moveLeft = true;
           break;
+        case "W":
         case "w":
           this.isPressed.moveForward = true;
           break;
+        case "S":
         case "s":
           this.isPressed.moveBack = true;
           break;
@@ -83,9 +90,11 @@ export class Movement {
         case "ArrowDown":
           this.isPressed.pitchDown = true;
           break;
+        case "Q":
         case "q":
           this.isPressed.rollLeft = true;
           break;
+        case "E":
         case "e":
           this.isPressed.rollRight = true;
           break;
@@ -95,15 +104,19 @@ export class Movement {
     element.addEventListener("keyup", (event) => {
       event.preventDefault();
       switch (event.key) {
+        case "D":
         case "d":
           this.isPressed.moveRight = false;
           break;
+        case "A":
         case "a":
           this.isPressed.moveLeft = false;
           break;
+        case "W":
         case "w":
           this.isPressed.moveForward = false;
           break;
+        case "S":
         case "s":
           this.isPressed.moveBack = false;
           break;
@@ -125,9 +138,11 @@ export class Movement {
         case "ArrowDown":
           this.isPressed.pitchDown = false;
           break;
+        case "Q":
         case "q":
           this.isPressed.rollLeft = false;
           break;
+        case "E":
         case "e":
           this.isPressed.rollRight = false;
           break;
@@ -171,7 +186,6 @@ export class Movement {
     );
 
     vec3.normalize(movement, movement);
-
     vec3.scale(movement, movement, this.acceleration * dt);
 
     this.move(movement[0], "u");

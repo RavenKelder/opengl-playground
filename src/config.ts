@@ -1,8 +1,12 @@
-export default {
+/** Configuration values for the site */
+const config = {
+  /** DOM element configuration */
   page: {
     CANVAS_CONTAINER_ID: "canvasContainer",
     CANVAS_ID: "glCanvas",
   },
+
+  /** GLSL shader values */
   shaders: {
     attributes: {
       VERTEX_POSITION: "aVertexPosition",
@@ -17,3 +21,5 @@ export default {
     },
   },
 };
+
+export default config;

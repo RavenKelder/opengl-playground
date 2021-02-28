@@ -232,7 +232,7 @@ export class Display {
     context.uniformMatrix4fv(
       uniformLocations.viewMatrix,
       false,
-      camera.updateTransformation()
+      camera.transformationMatrix()
     );
 
     const clock = (new Date().getTime() % 10000) / 10000;
