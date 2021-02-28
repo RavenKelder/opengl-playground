@@ -4,23 +4,25 @@ import { Display } from "./draw";
 import vertexShaderSource from "./shaders/vertex.glsl";
 import fragmentShaderSource from "./shaders/fragment.glsl";
 import VectorArray from "../model/vectorArray";
+import { Clock } from "../controller/clock";
 
 export class Renderer {
   context: WebGLRenderingContext;
   vertices: VectorArray;
   camera: Camera;
-  frameRate: number;
   display: Display;
   contextBuffer: WebGLBuffer;
-  enabled: boolean = false;
+  frameCounter: number = 0;
+  lastFPS: number = 0;
+  lastFPSTime: Date;
 
   constructor(
     canvas: HTMLCanvasElement,
     camera: Camera,
-    frameRate: number,
+    clock: Clock,
     vertices: VectorArray
   ) {
-    const context = canvas.getContext("webgl");
+    const context = canvas.getContext("webgl2");
 
     if (!context) {
       throw new Error("Unable to initialise WebGL context.");
@@ -50,46 +52,31 @@ export class Renderer {
 
     this.camera = camera;
 
-    this.frameRate = frameRate;
-
     this.vertices = vertices;
-  }
 
-  start(): boolean {
-    if (this.enabled) {
-      return false;
-    }
-    this.enabled = true;
+    this.lastFPSTime = new Date();
 
-    const { context, vertices, display, contextBuffer, frameRate } = this;
+    clock.addEventListener("tick", () => {
+      const { context, display } = this;
+      context.bufferData(
+        context.ARRAY_BUFFER,
+        new Float32Array(vertices.buffer),
+        context.STATIC_DRAW
+      );
 
-    (async () => {
-      while (this.enabled) {
-        context.bufferData(
-          context.ARRAY_BUFFER,
-          new Float32Array(vertices.buffer),
-          context.STATIC_DRAW
-        );
+      display.drawVertices(
+        contextBuffer,
+        vertices.vectorSize,
+        vertices.buffer.length / vertices.vectorSize
+      );
 
-        display.drawVertices(
-          contextBuffer,
-          vertices.vectorSize,
-          vertices.buffer.length / vertices.vectorSize
-        );
+      this.frameCounter++;
 
-        await new Promise((res) => setTimeout(res, 1000 / frameRate));
+      if (new Date().getTime() - this.lastFPSTime.getTime() >= 1000) {
+        this.lastFPS = this.frameCounter;
+        this.frameCounter = 0;
+        this.lastFPSTime = new Date();
       }
-    })();
-
-    return true;
-  }
-
-  stop(): boolean {
-    if (!this.enabled) {
-      return false;
-    }
-
-    this.enabled = false;
-    return true;
+    });
   }
 }

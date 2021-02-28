@@ -1,14 +1,13 @@
+import value from "*.glsl";
+import { Clock } from "../controller/clock";
 import VectorArray from "./vectorArray";
-import { BedheadAttractor, LorenzAttractor } from "./vectors";
+import { BedheadAttractor, Grid, LorenzAttractor } from "./vectors";
 
 export function generate(
-  controller: EventTarget,
+  clock: Clock,
   vectorsPerBuffer: number,
-  iterationDelay: number = 1,
   valuesPerIteration: number = 1000
 ): VectorArray {
-  var halt = false;
-
   const vectorSize = 3;
 
   const vectorArray: VectorArray = {
@@ -17,39 +16,26 @@ export function generate(
     numberOfVectors: vectorsPerBuffer,
   };
 
-  const vector = new LorenzAttractor();
+  const vector = new Grid(10, 1.0);
   var index = 0;
-
-  controller.addEventListener("stop", () => {
-    halt = true;
-  });
 
   var generatedValues = 0;
 
-  (async () => {
-    while (!halt) {
-      for (var i = 0; i < valuesPerIteration; i++) {
-        index = index % vectorArray.numberOfVectors;
+  clock.addEventListener("tick", () => {
+    for (let i = 0; i < valuesPerIteration; i++) {
+      index = index % vectorArray.numberOfVectors;
 
-        var nextVector = vector.coordinate();
+      var nextVector = vector.coordinate();
 
-        vectorArray.buffer[index * vectorSize] = nextVector[0];
-        vectorArray.buffer[index * vectorSize + 1] = nextVector[1];
-        vectorArray.buffer[index * vectorSize + 2] = nextVector[2];
+      vectorArray.buffer[index * vectorSize] = nextVector[0];
+      vectorArray.buffer[index * vectorSize + 1] = nextVector[1];
+      vectorArray.buffer[index * vectorSize + 2] = nextVector[2];
 
-        index++;
-      }
-
-      generatedValues = generatedValues + valuesPerIteration * vectorSize;
-
-      if (generatedValues > vectorArray.buffer.length) {
-        controller.dispatchEvent(new Event("start"));
-        // halt = true;
-      }
-
-      await new Promise((res) => setTimeout(res, iterationDelay));
+      index++;
     }
-  })();
+
+    generatedValues = generatedValues + valuesPerIteration * vectorSize;
+  });
 
   return vectorArray;
 }

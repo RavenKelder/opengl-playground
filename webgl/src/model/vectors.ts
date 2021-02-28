@@ -66,3 +66,39 @@ export class LorenzAttractor extends Vector {
     ];
   }
 }
+
+export class Grid extends Vector {
+  i: number = 0;
+  j: number = 0;
+  k: number = 0;
+  scale: number;
+  max: number;
+  constructor(max: number, scale: number) {
+    super();
+    this.max = max;
+    this.scale = scale;
+  }
+  coordinate(): [number, number, number] {
+    const { i, j, k, max, scale } = this;
+    this.i = i + 1;
+
+    if (this.i > max) {
+      this.j = j + 1;
+      this.i = 0;
+
+      if (this.j > max) {
+        this.k = k + 1;
+        this.j = 0;
+
+        if (this.k > max) {
+          this.k = 0;
+        }
+      }
+    }
+    return [
+      (i / max) * scale - scale / 2,
+      (j / max) * scale - scale / 2,
+      (k / max) * scale - scale / 2,
+    ];
+  }
+}

@@ -3,6 +3,8 @@ import config from "./config";
 import { generate } from "./model/generator";
 import { Camera } from "./webgl/camera";
 import { Movement } from "./controller/movement";
+import { generatorClock, physicsClock, renderClock } from "./controller/clock";
+import { EngineController } from "./controller/engine";
 
 const { page } = config;
 
@@ -11,9 +13,8 @@ var camera: Camera = new Camera();
 function main() {
   const canvasContainer = document.getElementById(page.CANVAS_CONTAINER_ID);
   const canvas = canvasElement(document.getElementById(page.CANVAS_ID));
-  const controller = new Controller();
 
-  const vectorArray = generate(controller, 100000, 1, 1000);
+  const vectorArray = generate(generatorClock, 100000, 1000);
 
   if (canvas && canvasContainer) {
     camera = new Camera({
@@ -22,8 +23,12 @@ function main() {
       },
     });
 
-    const renderer = new Renderer(canvas, camera, 60, vectorArray);
-    const movement = new Movement(canvasContainer, camera, 100);
+    const engineController = new EngineController(canvasContainer, [
+      generatorClock,
+    ]);
+
+    const renderer = new Renderer(canvas, camera, renderClock, vectorArray);
+    const movement = new Movement(canvasContainer, camera, physicsClock);
 
     const onResize = () => {
       const width = window.innerWidth - 50;
@@ -43,16 +48,9 @@ function main() {
 
     window.onresize = onResize;
 
-    controller.addEventListener("start", () => {
-      renderer.start();
-      movement.start();
+    window.onload = () => {
       onResize();
-    });
-
-    controller.addEventListener("stop", () => {
-      renderer.stop();
-      movement.stop();
-    });
+    };
   } else {
     alert("Cannot find canvas.");
   }

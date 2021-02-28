@@ -19,6 +19,7 @@ export class Display {
     viewMatrix: WebGLUniformLocation;
     clock: WebGLUniformLocation;
     pointSize: WebGLUniformLocation;
+    eyePosition: WebGLUniformLocation;
   };
 
   constructor(
@@ -59,6 +60,7 @@ export class Display {
       config.shaders.uniforms.POINT_SIZE,
       config.shaders.uniforms.PROJECTION_MATRIX,
       config.shaders.uniforms.CLOCK,
+      config.shaders.uniforms.EYE_POSITION,
     ];
 
     const uniformLocationObjects = uniformLocations.map((location) =>
@@ -93,6 +95,7 @@ export class Display {
       viewMatrix: uniformLocationObjects[0] as WebGLUniformLocation,
       clock: uniformLocationObjects[3] as WebGLUniformLocation,
       pointSize: uniformLocationObjects[1] as WebGLUniformLocation,
+      eyePosition: uniformLocationObjects[4] as WebGLUniformLocation,
     };
 
     this.camera = camera;
@@ -230,6 +233,13 @@ export class Display {
     context.uniform1f(uniformLocations.clock, clock);
 
     context.uniform1f(uniformLocations.pointSize, vertexSize);
+
+    context.uniform3f(
+      uniformLocations.eyePosition,
+      camera.eye[0],
+      camera.eye[1],
+      camera.eye[2]
+    );
 
     context.drawArrays(context.POINTS, 0, bufferSize);
 

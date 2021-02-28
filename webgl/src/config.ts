@@ -12,6 +12,7 @@ export default {
       PROJECTION_MATRIX: "uProjectionMatrix",
       POINT_SIZE: "pointSize",
       CLOCK: "clock",
+      EYE_POSITION: "eye_position",
     },
   },
 };

@@ -1,11 +1,15 @@
-class Clock extends EventTarget {
+export class Clock extends EventTarget {
   ticksPerSecond: number;
   enabled: boolean;
+  lastTick: Date;
+  delay: number;
 
   constructor(ticksPerSecond: number) {
     super();
     this.ticksPerSecond = ticksPerSecond;
     this.enabled = false;
+    this.delay = 1000 / ticksPerSecond;
+    this.lastTick = new Date();
   }
 
   start(): boolean {
@@ -20,7 +24,13 @@ class Clock extends EventTarget {
     (async () => {
       while (this.enabled) {
         this.dispatchEvent(tick);
-        await new Promise((res) => setTimeout(res, 1000 / this.ticksPerSecond));
+        const now = new Date();
+        const difference = now.getTime() - this.lastTick.getTime();
+        if (difference < this.delay) {
+          await new Promise((res) => setTimeout(res, this.delay - difference));
+        } else {
+          await new Promise((res) => setTimeout(res, 1));
+        }
       }
     })();
 
@@ -28,10 +38,17 @@ class Clock extends EventTarget {
   }
 
   stop() {
+    console.log("Stopping");
     this.enabled = false;
   }
 }
 
-const clock = new Clock(100);
+const physicsClock = new Clock(100);
+const renderClock = new Clock(60);
+const generatorClock = new Clock(100);
 
-export { clock };
+physicsClock.start();
+generatorClock.start();
+renderClock.start();
+
+export { physicsClock, renderClock, generatorClock };

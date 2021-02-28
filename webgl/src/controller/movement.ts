@@ -1,5 +1,6 @@
 import { vec3 } from "gl-matrix";
 import { Camera } from "../webgl/camera";
+import { Clock } from "./clock";
 
 export class Movement {
   element: HTMLElement;
@@ -7,7 +8,6 @@ export class Movement {
   velocity: vec3;
   rotation: vec3 = [0, 0, 0];
   enabled: boolean = false;
-  unitsPerSecond: number;
 
   moving: vec3;
   isPressed: {
@@ -43,13 +43,12 @@ export class Movement {
   maxSpeed: number = 0.03;
   friction: number = 0.99;
 
-  constructor(element: HTMLElement, camera: Camera, unitsPerSecond: number) {
+  constructor(element: HTMLElement, camera: Camera, clock: Clock) {
     this.element = element;
     this.velocity = [0, 0, 0];
     this.moving = [0, 0, 0];
 
     this.camera = camera;
-    this.unitsPerSecond = unitsPerSecond;
 
     element.addEventListener("keydown", (event) => {
       event.preventDefault();
@@ -134,35 +133,14 @@ export class Movement {
           break;
       }
     });
-  }
 
-  start(): boolean {
-    if (this.enabled) {
-      return false;
-    }
-
-    this.enabled = true;
-
-    (async () => {
-      while (this.enabled) {
-        this.updateMovement();
-        this.camera.move(this.velocity);
-        this.camera.rotate(this.rotation[0], "u");
-        this.camera.rotate(this.rotation[1], "v");
-        this.camera.rotate(this.rotation[2], "n");
-        await new Promise((res) => setTimeout(res, 1000 / this.unitsPerSecond));
-      }
-    })();
-
-    return true;
-  }
-  stop(): boolean {
-    if (!this.enabled) {
-      return false;
-    }
-
-    this.enabled = false;
-    return true;
+    clock.addEventListener("tick", () => {
+      this.updateMovement();
+      this.camera.move(this.velocity);
+      this.camera.rotate(this.rotation[0], "u");
+      this.camera.rotate(this.rotation[1], "v");
+      this.camera.rotate(this.rotation[2], "n");
+    });
   }
 
   updateMovement() {
