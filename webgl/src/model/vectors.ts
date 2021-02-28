@@ -102,3 +102,70 @@ export class Grid extends Vector {
     ];
   }
 }
+
+export class HenonAttractor extends Vector {
+  x: number = 1;
+  y: number = 1;
+
+  constructor() {
+    super();
+  }
+
+  coordinate(): [number, number, number] {
+    const { x, y } = this;
+    const newX = y + 1 - 1.4 * Math.pow(x, 2);
+    const newY = 0.3 * x;
+
+    this.x = newX;
+    this.y = newY;
+
+    return [newX, newY, 0];
+  }
+}
+
+export class CyclicSymmetricAttractor extends Vector {
+  x: number = 1;
+  y: number = 0;
+  z: number = 2;
+  b: number = 0.108186;
+  dt: number = 0.005;
+  scale: number = 0.5;
+  constructor(b?: number) {
+    super();
+    if (b) {
+      this.b = b;
+    }
+  }
+
+  coordinate(): [number, number, number] {
+    const { x, y, z, b, dt, scale } = this;
+    const dX = (Math.sin(y) - b * x) * dt;
+    const dY = (Math.sin(z) - b * y) * dt;
+    const dZ = (Math.sin(x) - b * z) * dt;
+
+    this.x = x + dX;
+    this.y = y + dY;
+    this.z = z + dZ;
+
+    return [this.x * scale, this.y * scale, this.z * scale];
+  }
+}
+
+export class MergedVectors extends Vector {
+  counter: number = 0;
+  vectors: Vector[] = [];
+
+  constructor(...vectors: Vector[]) {
+    super();
+    this.vectors = vectors;
+  }
+
+  coordinate(): [number, number, number] {
+    const { counter, vectors } = this;
+    this.counter = counter % vectors.length;
+    const index = this.counter;
+    this.counter++;
+
+    return vectors[index].coordinate();
+  }
+}

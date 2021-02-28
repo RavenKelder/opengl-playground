@@ -13,6 +13,7 @@ export default {
       POINT_SIZE: "pointSize",
       CLOCK: "clock",
       EYE_POSITION: "eye_position",
+      VIEW_DISTANCE: "viewDistance",
     },
   },
 };

@@ -36,7 +36,8 @@ export class Renderer {
         vertexSource: vertexShaderSource,
         fragmentSource: fragmentShaderSource,
       },
-      camera
+      camera,
+      true
     );
 
     this.display.setVertexSize(1);

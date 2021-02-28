@@ -1,14 +1,13 @@
 import { Renderer } from "./webgl/render";
 import config from "./config";
-import { generate } from "./model/generator";
+import { generate, generateCamera } from "./model/generator";
 import { Camera } from "./webgl/camera";
 import { Movement } from "./controller/movement";
 import { generatorClock, physicsClock, renderClock } from "./controller/clock";
 import { EngineController } from "./controller/engine";
+import VectorArray from "./model/vectorArray";
 
 const { page } = config;
-
-var camera: Camera = new Camera();
 
 function main() {
   const canvasContainer = document.getElementById(page.CANVAS_CONTAINER_ID);
@@ -17,11 +16,13 @@ function main() {
   const vectorArray = generate(generatorClock, 100000, 1000);
 
   if (canvas && canvasContainer) {
-    camera = new Camera({
+    const camera = new Camera({
       perspective: {
         aspectRatio: canvas.clientWidth / canvas.clientHeight,
       },
     });
+
+    // const vectorArray = generateCamera(generatorClock, camera);
 
     const engineController = new EngineController(canvasContainer, [
       generatorClock,
@@ -75,5 +76,3 @@ class Controller extends EventTarget {
 }
 
 main();
-
-export { camera };

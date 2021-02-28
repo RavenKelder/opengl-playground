@@ -5,35 +5,28 @@ uniform mat4 uModelViewMatrix;
 uniform mat4 uProjectionMatrix;
 uniform vec3 eye_position;
 uniform float pointSize;
+uniform float viewDistance;
 
 varying vec4 vertexPosition;
+varying float fadeValue;
 
-float fade(float pointDistance, float value);
+float fade(float pointDistance);
 
 void main() {
   gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-    float pointDistance = sqrt(
-    pow(gl_Position.x - eye_position.x, 2.0) +
-    pow(gl_Position.y - eye_position.y, 2.0) +
-    pow(gl_Position.z - eye_position.z, 2.0)
+   float pointDistance = sqrt(
+    pow(aVertexPosition.x - eye_position.x, 2.0) +
+    pow(aVertexPosition.y - eye_position.y, 2.0) +
+    pow(aVertexPosition.z - eye_position.z, 2.0)
   );
 
-  gl_PointSize = fade(pointDistance, pointSize);
-  vertexPosition = gl_Position;
+  fadeValue = fade(pointDistance);
+
+  gl_PointSize = fadeValue * pointSize;
+
+  vertexPosition = aVertexPosition;
 }
 
-float fade(float pointDistance, float value) {
-  if (pointDistance > 1.5) {
-    return 1.0;
-  } 
-  
-  if (pointDistance > 1.0) {
-    return 5.0;
-  }
-
-  if (pointDistance > 0.5) {
-    return 10.0;
-  }
-
-  return 15.0;
+float fade(float pointDistance) {
+  return 1.0 / (1.0 + exp(viewDistance * (pointDistance - viewDistance)));;
 }

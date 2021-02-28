@@ -1,6 +1,6 @@
 import { vec3 } from "gl-matrix";
 import { Camera } from "../webgl/camera";
-import { Clock } from "./clock";
+import { Clock, ClockEvent } from "./clock";
 
 export class Movement {
   element: HTMLElement;
@@ -38,8 +38,8 @@ export class Movement {
     rollRight: false,
   };
 
-  acceleration: number = 0.0002;
-  rotationAcceleration: number = 0.0005;
+  acceleration: number = 0.005;
+  rotationAcceleration: number = 0.02;
   maxSpeed: number = 0.03;
   friction: number = 0.99;
 
@@ -134,8 +134,12 @@ export class Movement {
       }
     });
 
-    clock.addEventListener("tick", () => {
-      this.updateMovement();
+    clock.addEventListener("tick", (event: Event) => {
+      if (event instanceof ClockEvent) {
+        this.updateMovement(event.sinceLastTick / 1000);
+      } else {
+        console.log("Invalid event type");
+      }
       this.camera.move(this.velocity);
       this.camera.rotate(this.rotation[0], "u");
       this.camera.rotate(this.rotation[1], "v");
@@ -143,30 +147,36 @@ export class Movement {
     });
   }
 
-  updateMovement() {
+  updateMovement(dt: number) {
     const {
-      moveForward: w,
-      moveLeft: a,
-      moveBack: s,
-      moveRight: d,
-      moveUp: e,
-      moveDown: c,
-      yawLeft: left,
-      yawRight: right,
-      pitchUp: up,
-      pitchDown: down,
+      moveForward,
+      moveLeft,
+      moveBack,
+      moveRight,
+      moveUp,
+      moveDown,
+      yawLeft,
+      yawRight,
+      pitchUp,
+      pitchDown,
       rollLeft,
       rollRight,
     } = this.isPressed;
 
-    var movementU = (a ? this.acceleration : 0) - (d ? this.acceleration : 0);
-    this.move(movementU, "u");
+    var movement: vec3 = vec3.set(
+      vec3.create(),
+      (moveLeft ? 1 : 0) - (moveRight ? 1 : 0),
+      (moveForward ? 1 : 0) - (moveBack ? 1 : 0),
+      (moveUp ? 1 : 0) - (moveDown ? 1 : 0)
+    );
 
-    var movementN = (w ? this.acceleration : 0) - (s ? this.acceleration : 0);
-    this.move(movementN, "n");
+    vec3.normalize(movement, movement);
 
-    var movementV = (e ? this.acceleration : 0) - (c ? this.acceleration : 0);
-    this.move(movementV, "v");
+    vec3.scale(movement, movement, this.acceleration * dt);
+
+    this.move(movement[0], "u");
+    this.move(movement[1], "n");
+    this.move(movement[2], "v");
 
     this.velocity = [
       this.velocity[0] * this.friction,
@@ -174,21 +184,17 @@ export class Movement {
       this.velocity[2] * this.friction,
     ];
 
-    var rotateV =
-      (left ? this.rotationAcceleration : 0) -
-      (right ? this.rotationAcceleration : 0);
-    var rotateU =
-      (up ? this.rotationAcceleration : 0) -
-      (down ? this.rotationAcceleration : 0);
-    const rotateN =
-      (rollRight ? this.rotationAcceleration : 0) -
-      (rollLeft ? this.rotationAcceleration : 0);
+    var rotation: vec3 = vec3.set(
+      vec3.create(),
+      (pitchUp ? 1 : 0) - (pitchDown ? 1 : 0),
+      (yawLeft ? 1 : 0) - (yawRight ? 1 : 0),
+      (rollRight ? 1 : 0) - (rollLeft ? 1 : 0)
+    );
 
-    this.rotation = [
-      this.rotation[0] + rotateU,
-      this.rotation[1] + rotateV,
-      this.rotation[2] + rotateN,
-    ];
+    vec3.normalize(rotation, rotation);
+    vec3.scale(rotation, rotation, this.rotationAcceleration * dt);
+
+    this.rotation = vec3.add(this.rotation, this.rotation, rotation);
 
     this.rotation = [
       this.rotation[0] * this.friction,

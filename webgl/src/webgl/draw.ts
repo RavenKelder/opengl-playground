@@ -20,6 +20,7 @@ export class Display {
     clock: WebGLUniformLocation;
     pointSize: WebGLUniformLocation;
     eyePosition: WebGLUniformLocation;
+    viewDistance: WebGLUniformLocation;
   };
 
   constructor(
@@ -28,7 +29,8 @@ export class Display {
       vertexSource: string;
       fragmentSource: string;
     },
-    camera: Camera
+    camera: Camera,
+    ignoreMissingLocations: boolean = false
   ) {
     this.context = context;
     this.createProgram(shaders.vertexSource, shaders.fragmentSource);
@@ -61,6 +63,7 @@ export class Display {
       config.shaders.uniforms.PROJECTION_MATRIX,
       config.shaders.uniforms.CLOCK,
       config.shaders.uniforms.EYE_POSITION,
+      config.shaders.uniforms.VIEW_DISTANCE,
     ];
 
     const uniformLocationObjects = uniformLocations.map((location) =>
@@ -81,7 +84,10 @@ export class Display {
       false
     );
 
-    if (invalidAttributeLocationExists || invalidUniformLocationExists) {
+    if (
+      (invalidAttributeLocationExists || invalidUniformLocationExists) &&
+      !ignoreMissingLocations
+    ) {
       throw new Error(errors.reduce((prev, current) => prev + "\n" + current));
     }
 
@@ -96,6 +102,7 @@ export class Display {
       clock: uniformLocationObjects[3] as WebGLUniformLocation,
       pointSize: uniformLocationObjects[1] as WebGLUniformLocation,
       eyePosition: uniformLocationObjects[4] as WebGLUniformLocation,
+      viewDistance: uniformLocationObjects[5] as WebGLUniformLocation,
     };
 
     this.camera = camera;
@@ -233,6 +240,8 @@ export class Display {
     context.uniform1f(uniformLocations.clock, clock);
 
     context.uniform1f(uniformLocations.pointSize, vertexSize);
+
+    context.uniform1f(uniformLocations.viewDistance, 5);
 
     context.uniform3f(
       uniformLocations.eyePosition,
