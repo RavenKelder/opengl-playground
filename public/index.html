@@ -9,7 +9,19 @@
   </head>
   <body>
     <span id="canvasContainer" tabindex="1">
-      <canvas id="glCanvas" width="1920" height="1080"> </canvas>
+      <div style="display: flex">
+        <canvas id="glCanvas" width="1920" height="1080" style="margin: auto">
+        </canvas>
+      </div>
+      <div id="menu">
+        <button id="cyclic-attractor">
+          Thomas Cyclically Symmetric Attractor
+        </button>
+        <button id="lorenz-attractor">Lorenz Attractor</button>
+        <button id="bedhead-attractor">Bedhead Attractor</button>
+        <button id="cube-grid">Cube Grid</button>
+        <button id="cam-coord-button">Camera Coordinate System</button>
+      </div>
     </span>
     <script type="module" src="./dist/index.js"></script>
   </body>

@@ -5,8 +5,15 @@ import { Camera } from "./webgl/camera";
 import { Movement } from "./controller/movement";
 import { generatorClock, physicsClock, renderClock } from "./controller/clock";
 import { EngineController } from "./controller/engine";
+import {
+  BedheadAttractor,
+  CyclicSymmetricAttractor,
+  Grid,
+  LorenzAttractor,
+} from "./model/vectors";
 
 const { page } = config;
+let stopCurrentGenerator: () => void = () => {};
 
 /** Quite a hot mess at the moment; this function currently links the controller,
  * model and view together */
@@ -22,8 +29,13 @@ function main() {
     });
 
     // Get the array which will contain the points to render
-    const vectorArray = generate(generatorClock, 100000, 1000);
-    // const vectorArray = generateCamera(generatorClock, camera);
+    let [vectorArray, stopGenerator1] = generate(
+      generatorClock,
+      100000,
+      1000,
+      new CyclicSymmetricAttractor()
+    );
+    stopCurrentGenerator = stopGenerator1;
 
     // engineController binds the "p" key to pause the vectorArray generation
     const engineController = new EngineController(canvasContainer, [
@@ -61,6 +73,80 @@ function main() {
     window.onload = () => {
       onResize();
     };
+
+    document
+      .getElementById("cam-coord-button")
+      ?.addEventListener("click", () => {
+        stopCurrentGenerator();
+        const [vArray, stopGenerator] = generateCamera(
+          generatorClock,
+          camera,
+          10000,
+          0.0002
+        );
+        stopCurrentGenerator = stopGenerator;
+        vectorArray.numberOfVectors = vArray.numberOfVectors;
+        vectorArray.buffer = vArray.buffer;
+        vectorArray.vectorSize = vArray.vectorSize;
+      });
+    document
+      .getElementById("lorenz-attractor")
+      ?.addEventListener("click", () => {
+        stopCurrentGenerator();
+        const [vArray, stopGenerator] = generate(
+          generatorClock,
+          100000,
+          1000,
+          new LorenzAttractor()
+        );
+        stopCurrentGenerator = stopGenerator;
+        vectorArray.numberOfVectors = vArray.numberOfVectors;
+        vectorArray.buffer = vArray.buffer;
+        vectorArray.vectorSize = vArray.vectorSize;
+      });
+    document
+      .getElementById("bedhead-attractor")
+      ?.addEventListener("click", () => {
+        stopCurrentGenerator();
+        const [vArray, stopGenerator] = generate(
+          generatorClock,
+          100000,
+          1000,
+          new BedheadAttractor()
+        );
+        stopCurrentGenerator = stopGenerator;
+        vectorArray.numberOfVectors = vArray.numberOfVectors;
+        vectorArray.buffer = vArray.buffer;
+        vectorArray.vectorSize = vArray.vectorSize;
+      });
+    document.getElementById("cube-grid")?.addEventListener("click", () => {
+      stopCurrentGenerator();
+      const [vArray, stopGenerator] = generate(
+        generatorClock,
+        200000,
+        1000,
+        new Grid(50, 10)
+      );
+      stopCurrentGenerator = stopGenerator;
+      vectorArray.numberOfVectors = vArray.numberOfVectors;
+      vectorArray.buffer = vArray.buffer;
+      vectorArray.vectorSize = vArray.vectorSize;
+    });
+    document
+      .getElementById("cyclic-attractor")
+      ?.addEventListener("click", () => {
+        stopCurrentGenerator();
+        const [vArray, stopGenerator] = generate(
+          generatorClock,
+          100000,
+          1000,
+          new CyclicSymmetricAttractor()
+        );
+        stopCurrentGenerator = stopGenerator;
+        vectorArray.numberOfVectors = vArray.numberOfVectors;
+        vectorArray.buffer = vArray.buffer;
+        vectorArray.vectorSize = vArray.vectorSize;
+      });
   } else {
     alert("Cannot find canvas.");
   }

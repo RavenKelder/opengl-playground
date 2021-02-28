@@ -3,10 +3,11 @@ body {
   font-family: sans-serif;
 }
 
-span#canvasContainer {
-  display: flex;
-}
-
 canvas#glCanvas {
   margin: auto;
+}
+
+div#menu {
+  height: 20px;
+  width: 100%;
 }

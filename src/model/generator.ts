@@ -1,22 +1,15 @@
-import value from "*.glsl";
 import { vec3 } from "gl-matrix";
 import { Clock } from "../controller/clock";
 import { Camera } from "../webgl/camera";
 import VectorArray from "./vectorArray";
-import {
-  BedheadAttractor,
-  CyclicSymmetricAttractor,
-  Grid,
-  HenonAttractor,
-  LorenzAttractor,
-  MergedVectors,
-} from "./vectors";
+import { Vector } from "./vectors";
 
 export function generate(
   clock: Clock,
   vectorsPerBuffer: number,
-  valuesPerIteration: number = 1000
-): VectorArray {
+  valuesPerIteration: number = 1000,
+  vector: Vector
+): [VectorArray, () => void] {
   const vectorSize = 3;
 
   const vectorArray: VectorArray = {
@@ -24,13 +17,11 @@ export function generate(
     vectorSize,
     numberOfVectors: vectorsPerBuffer,
   };
-
-  const vector = new MergedVectors(new CyclicSymmetricAttractor());
   var index = 0;
 
   var generatedValues = 0;
 
-  clock.addEventListener("tick", () => {
+  const callback = () => {
     for (let i = 0; i < valuesPerIteration; i++) {
       index = index % vectorArray.numberOfVectors;
 
@@ -44,20 +35,31 @@ export function generate(
     }
 
     generatedValues = generatedValues + valuesPerIteration * vectorSize;
-  });
+  };
 
-  return vectorArray;
+  clock.addEventListener("tick", callback);
+
+  return [
+    vectorArray,
+    () => {
+      clock.removeEventListener("tick", callback);
+    },
+  ];
 }
 
-export function generateCamera(clock: Clock, camera: Camera) {
-  const rep = 10;
+export function generateCamera(
+  clock: Clock,
+  camera: Camera,
+  pointsPerDirection: number,
+  distanceBetweenPoints: number
+): [VectorArray, () => void] {
   const vectorArray: VectorArray = {
     buffer: new Array(3).fill(0),
     vectorSize: 3,
-    numberOfVectors: 2 + 10 * 3,
+    numberOfVectors: 2 + pointsPerDirection * 3,
   };
 
-  clock.addEventListener("tick", () => {
+  const callback = () => {
     var nextVector = camera.eye;
 
     vectorArray.buffer[0] = nextVector[0];
@@ -68,12 +70,12 @@ export function generateCamera(clock: Clock, camera: Camera) {
 
     var offset = 3;
     [u, v, n].forEach((dir) => {
-      for (let i = 0; i < rep; i++) {
+      for (let i = 0; i < pointsPerDirection; i++) {
         let nextPoint = vec3.scaleAndAdd(
           vec3.create(),
           camera.eye,
           dir,
-          0.1 * (i + 1)
+          distanceBetweenPoints * (i + 1)
         );
         vectorArray.buffer[offset] = nextPoint[0];
         vectorArray.buffer[offset + 1] = nextPoint[1];
@@ -83,10 +85,24 @@ export function generateCamera(clock: Clock, camera: Camera) {
       }
     });
 
-    vectorArray.buffer[offset] = camera.lookingAt[0] * 2;
-    vectorArray.buffer[offset + 1] = camera.lookingAt[1] * 2;
-    vectorArray.buffer[offset + 2] = camera.lookingAt[2] * 2;
-  });
+    const lookingAt = vec3.scaleAndAdd(
+      vec3.create(),
+      camera.eye,
+      camera.lookingAt,
+      pointsPerDirection * distanceBetweenPoints
+    );
 
-  return vectorArray;
+    vectorArray.buffer[offset] = lookingAt[0];
+    vectorArray.buffer[offset + 1] = lookingAt[1];
+    vectorArray.buffer[offset + 2] = lookingAt[2];
+  };
+
+  clock.addEventListener("tick", callback);
+
+  return [
+    vectorArray,
+    () => {
+      clock.removeEventListener("tick", callback);
+    },
+  ];
 }
