@@ -3,7 +3,7 @@ import { mat4, vec3, vec4 } from "gl-matrix";
 const defaultPerspective: Perspective = {
   fieldOfView: (45 / 180) * Math.PI,
   aspectRatio: 1.0,
-  viewRange: [0.1, 100.0],
+  viewRange: [0.01, 100.0],
 };
 
 type CameraCoordSystem = "u" | "v" | "n";
