@@ -124,11 +124,11 @@ export class HenonAttractor extends Vector {
 }
 
 export class CyclicSymmetricAttractor extends Vector {
-  x: number = 1;
-  y: number = 0;
-  z: number = 2;
-  b: number = 0.108186;
-  dt: number = 0.005;
+  x: number = -0.5;
+  y: number = -0.5;
+  z: number = -0.25;
+  b: number = 0.208186;
+  dt: number = 0.05;
   scale: number = 0.5;
   constructor(b?: number) {
     super();

@@ -116,7 +116,7 @@ export class Display {
   ): void {
     this.ready = false;
 
-    const { context, _loadShader } = this;
+    const { context } = this;
     const vertexShader = this._loadShader(
       context.VERTEX_SHADER,
       vertexShaderSource

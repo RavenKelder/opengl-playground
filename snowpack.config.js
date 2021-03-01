@@ -1,5 +1,6 @@
 require("snowpack-plugin-glslify");
 /** @type {import("snowpack").SnowpackUserConfig } */
+
 module.exports = {
   mount: {
     public: "/",
@@ -12,7 +13,7 @@ module.exports = {
   ],
   optimize: {
     /* Example: Bundle your final build: */
-    // "bundle": true,
+    bundle: true,
   },
   packageOptions: {
     /* ... */

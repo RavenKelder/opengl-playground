@@ -38,16 +38,14 @@ function main() {
     stopCurrentGenerator = stopGenerator1;
 
     // engineController binds the "p" key to pause the vectorArray generation
-    const engineController = new EngineController(canvasContainer, [
-      generatorClock,
-    ]);
+    new EngineController(canvasContainer, [generatorClock]);
 
     // Setup the WebGL rendering
     const renderer = new Renderer(canvas, camera, renderClock, vectorArray);
 
     // Setup the camera movement controls, binding key presses to move the
     // camera around
-    const movement = new Movement(canvasContainer, camera, physicsClock);
+    new Movement(canvasContainer, camera, physicsClock);
 
     // Listener to resize the canvas, the WebGL context and the camera aspect
     // ratio when the browser window resizes.
