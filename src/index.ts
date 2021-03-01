@@ -11,6 +11,7 @@ import {
   Grid,
   LorenzAttractor,
 } from "./model/vectors";
+import { VectorBuffers } from "./model/vectorBuffers";
 
 const { page } = config;
 let stopCurrentGenerator: () => void = () => {};
@@ -21,6 +22,8 @@ function main() {
   const canvasContainer = document.getElementById(page.CANVAS_CONTAINER_ID);
   const canvas = canvasElement(document.getElementById(page.CANVAS_ID));
 
+  const buffers = new VectorBuffers([]);
+
   if (canvas && canvasContainer) {
     const camera = new Camera({
       perspective: {
@@ -29,19 +32,25 @@ function main() {
     });
 
     // Get the array which will contain the points to render
-    let [vectorArray, stopGenerator1] = generate(
+    let [, stopGenerator1] = generate(
+      "csa",
       generatorClock,
       100000,
       1000,
-      new CyclicSymmetricAttractor()
+      new CyclicSymmetricAttractor(),
+      buffers
     );
     stopCurrentGenerator = stopGenerator1;
+
+    if (!buffers.setActiveBuffer("csa")) {
+      console.log("Failed to activate buffer");
+    }
 
     // engineController binds the "p" key to pause the vectorArray generation
     new EngineController(canvasContainer, [generatorClock]);
 
     // Setup the WebGL rendering
-    const renderer = new Renderer(canvas, camera, renderClock, vectorArray);
+    const renderer = new Renderer(canvas, camera, renderClock, buffers);
 
     // Setup the camera movement controls, binding key presses to move the
     // camera around
@@ -72,79 +81,79 @@ function main() {
       onResize();
     };
 
-    document
-      .getElementById("cam-coord-button")
-      ?.addEventListener("click", () => {
-        stopCurrentGenerator();
-        const [vArray, stopGenerator] = generateCamera(
-          generatorClock,
-          camera,
-          10000,
-          0.0002
-        );
-        stopCurrentGenerator = stopGenerator;
-        vectorArray.numberOfVectors = vArray.numberOfVectors;
-        vectorArray.buffer = vArray.buffer;
-        vectorArray.vectorSize = vArray.vectorSize;
-      });
-    document
-      .getElementById("lorenz-attractor")
-      ?.addEventListener("click", () => {
-        stopCurrentGenerator();
-        const [vArray, stopGenerator] = generate(
-          generatorClock,
-          100000,
-          1000,
-          new LorenzAttractor()
-        );
-        stopCurrentGenerator = stopGenerator;
-        vectorArray.numberOfVectors = vArray.numberOfVectors;
-        vectorArray.buffer = vArray.buffer;
-        vectorArray.vectorSize = vArray.vectorSize;
-      });
-    document
-      .getElementById("bedhead-attractor")
-      ?.addEventListener("click", () => {
-        stopCurrentGenerator();
-        const [vArray, stopGenerator] = generate(
-          generatorClock,
-          100000,
-          1000,
-          new BedheadAttractor()
-        );
-        stopCurrentGenerator = stopGenerator;
-        vectorArray.numberOfVectors = vArray.numberOfVectors;
-        vectorArray.buffer = vArray.buffer;
-        vectorArray.vectorSize = vArray.vectorSize;
-      });
-    document.getElementById("cube-grid")?.addEventListener("click", () => {
-      stopCurrentGenerator();
-      const [vArray, stopGenerator] = generate(
-        generatorClock,
-        200000,
-        1000,
-        new Grid(50, 10)
-      );
-      stopCurrentGenerator = stopGenerator;
-      vectorArray.numberOfVectors = vArray.numberOfVectors;
-      vectorArray.buffer = vArray.buffer;
-      vectorArray.vectorSize = vArray.vectorSize;
-    });
-    document
-      .getElementById("cyclic-attractor")
-      ?.addEventListener("click", () => {
-        stopCurrentGenerator();
-        const [vArray, stopGenerator] = generate(
-          generatorClock,
-          100000,
-          1000,
-          new CyclicSymmetricAttractor()
-        );
-        stopCurrentGenerator = stopGenerator;
-        vectorArray.numberOfVectors = vArray.numberOfVectors;
-        vectorArray.buffer = vArray.buffer;
-        vectorArray.vectorSize = vArray.vectorSize;
-      });
+    // document
+    //   .getElementById("cam-coord-button")
+    //   ?.addEventListener("click", () => {
+    //     stopCurrentGenerator();
+    //     const [vArray, stopGenerator] = generateCamera(
+    //       generatorClock,
+    //       camera,
+    //       10000,
+    //       0.0002
+    //     );
+    //     stopCurrentGenerator = stopGenerator;
+    //     vectorBuffer.numberOfVectors = vArray.numberOfVectors;
+    //     vectorBuffer.buffer = vArray.buffer;
+    //     vectorBuffer.vectorSize = vArray.vectorSize;
+    //   });
+    // document
+    //   .getElementById("lorenz-attractor")
+    //   ?.addEventListener("click", () => {
+    //     stopCurrentGenerator();
+    //     const [vArray, stopGenerator] = generate(
+    //       generatorClock,
+    //       100000,
+    //       1000,
+    //       new LorenzAttractor()
+    //     );
+    //     stopCurrentGenerator = stopGenerator;
+    //     vectorBuffer.numberOfVectors = vArray.numberOfVectors;
+    //     vectorBuffer.buffer = vArray.buffer;
+    //     vectorBuffer.vectorSize = vArray.vectorSize;
+    //   });
+    // document
+    //   .getElementById("bedhead-attractor")
+    //   ?.addEventListener("click", () => {
+    //     stopCurrentGenerator();
+    //     const [vArray, stopGenerator] = generate(
+    //       generatorClock,
+    //       100000,
+    //       1000,
+    //       new BedheadAttractor()
+    //     );
+    //     stopCurrentGenerator = stopGenerator;
+    //     vectorBuffer.numberOfVectors = vArray.numberOfVectors;
+    //     vectorBuffer.buffer = vArray.buffer;
+    //     vectorBuffer.vectorSize = vArray.vectorSize;
+    //   });
+    // document.getElementById("cube-grid")?.addEventListener("click", () => {
+    //   stopCurrentGenerator();
+    //   const [vArray, stopGenerator] = generate(
+    //     generatorClock,
+    //     200000,
+    //     1000,
+    //     new Grid(50, 10)
+    //   );
+    // stopCurrentGenerator = stopGenerator;
+    // vectorBuffer.numberOfVectors = vArray.numberOfVectors;
+    // vectorBuffer.buffer = vArray.buffer;
+    // vectorBuffer.vectorSize = vArray.vectorSize;
+    // });
+    // document
+    //   .getElementById("cyclic-attractor")
+    //   ?.addEventListener("click", () => {
+    //     stopCurrentGenerator();
+    //     const [vArray, stopGenerator] = generate(
+    //       generatorClock,
+    //       100000,
+    //       1000,
+    //       new CyclicSymmetricAttractor()
+    //     );
+    //     stopCurrentGenerator = stopGenerator;
+    //     vectorBuffer.numberOfVectors = vArray.numberOfVectors;
+    //     vectorBuffer.buffer = vArray.buffer;
+    //     vectorBuffer.vectorSize = vArray.vectorSize;
+    //   });
   } else {
     alert("Cannot find canvas.");
   }

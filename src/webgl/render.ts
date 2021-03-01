@@ -3,12 +3,12 @@ import { Display } from "./draw";
 
 import vertexShaderSource from "./shaders/vertex.glsl";
 import fragmentShaderSource from "./shaders/fragment.glsl";
-import VectorArray from "../model/vectorArray";
 import { Clock } from "../controller/clock";
+import { VectorBuffers } from "../model/vectorBuffers";
 
 export class Renderer {
   context: WebGLRenderingContext;
-  vertices: VectorArray;
+  buffers: VectorBuffers;
   camera: Camera;
   display: Display;
   contextBuffer: WebGLBuffer;
@@ -20,7 +20,7 @@ export class Renderer {
     canvas: HTMLCanvasElement,
     camera: Camera,
     clock: Clock,
-    vertices: VectorArray
+    buffers: VectorBuffers
   ) {
     const context = canvas.getContext("webgl2");
 
@@ -53,23 +53,22 @@ export class Renderer {
 
     this.camera = camera;
 
-    this.vertices = vertices;
+    this.buffers = buffers;
 
     this.lastFPSTime = new Date();
 
     clock.addEventListener("tick", () => {
-      const { context, display } = this;
-      context.bufferData(
-        context.ARRAY_BUFFER,
-        new Float32Array(vertices.buffer),
-        context.STATIC_DRAW
-      );
+      const { context, display, buffers } = this;
+      const activeBuffer = buffers.getCurrentBuffer();
+      if (!activeBuffer) {
+        return;
+      }
 
-      display.drawVertices(
-        contextBuffer,
-        vertices.vectorSize,
-        vertices.buffer.length / vertices.vectorSize
-      );
+      const { buffer, vectorSize, vectorAmount, vectorType } = activeBuffer;
+
+      context.bufferData(context.ARRAY_BUFFER, buffer, context.STATIC_DRAW);
+
+      display.drawVertices(contextBuffer, vectorSize, vectorAmount, vectorType);
 
       this.frameCounter++;
 

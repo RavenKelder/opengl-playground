@@ -1,4 +1,5 @@
 import config from "../config";
+import { VectorType } from "../model/vectorBuffers";
 import { Camera } from "./camera";
 
 export class Display {
@@ -188,8 +189,9 @@ export class Display {
 
   drawVertices(
     vertices: WebGLBuffer,
-    vectorSize: 1 | 2 | 3,
-    bufferSize: number
+    vectorSize: number,
+    bufferSize: number,
+    vectorType: VectorType
   ): boolean {
     if (!this.ready) {
       return false;
@@ -250,7 +252,7 @@ export class Display {
       camera.eye[2]
     );
 
-    context.drawArrays(context.POINTS, 0, bufferSize);
+    context.drawArrays(context[vectorType], 0, bufferSize);
 
     return true;
   }

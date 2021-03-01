@@ -1,35 +1,42 @@
 import { vec3 } from "gl-matrix";
 import { Clock } from "../controller/clock";
 import { Camera } from "../webgl/camera";
-import VectorArray from "./vectorArray";
+import { BufferSetting, VectorBuffer, VectorBuffers } from "./vectorBuffers";
 import { Vector } from "./vectors";
 
 export function generate(
+  name: string,
   clock: Clock,
   vectorsPerBuffer: number,
   valuesPerIteration: number = 1000,
-  vector: Vector
-): [VectorArray, () => void] {
-  const vectorSize = 3;
-
-  const vectorArray: VectorArray = {
-    buffer: new Array(vectorsPerBuffer * vectorSize).fill(0),
-    vectorSize,
-    numberOfVectors: vectorsPerBuffer,
+  vector: Vector,
+  buffers: VectorBuffers
+): [VectorBuffer, () => void] {
+  const bufferSetting: BufferSetting = {
+    name,
+    vectorAmount: vectorsPerBuffer,
+    vectorSize: 3,
+    vectorType: "POINTS",
   };
+
+  const vectorBuffer = buffers.addBuffer(bufferSetting);
+
+  if (!vectorBuffer) {
+    throw new Error("Failed to allocate buffer " + name);
+  }
   var index = 0;
 
   var generatedValues = 0;
 
   const callback = () => {
+    const { vectorAmount, vectorSize, buffer } = vectorBuffer;
     for (let i = 0; i < valuesPerIteration; i++) {
-      index = index % vectorArray.numberOfVectors;
-
+      index = index % vectorAmount;
       var nextVector = vector.coordinate();
 
-      vectorArray.buffer[index * vectorSize] = nextVector[0];
-      vectorArray.buffer[index * vectorSize + 1] = nextVector[1];
-      vectorArray.buffer[index * vectorSize + 2] = nextVector[2];
+      buffer[index * vectorSize] = nextVector[0];
+      buffer[index * vectorSize + 1] = nextVector[1];
+      buffer[index * vectorSize + 2] = nextVector[2];
 
       index++;
     }
@@ -40,7 +47,7 @@ export function generate(
   clock.addEventListener("tick", callback);
 
   return [
-    vectorArray,
+    vectorBuffer,
     () => {
       clock.removeEventListener("tick", callback);
     },
@@ -48,23 +55,32 @@ export function generate(
 }
 
 export function generateCamera(
+  name: string,
   clock: Clock,
   camera: Camera,
   pointsPerDirection: number,
-  distanceBetweenPoints: number
-): [VectorArray, () => void] {
-  const vectorArray: VectorArray = {
-    buffer: new Array(3).fill(0),
+  distanceBetweenPoints: number,
+  buffers: VectorBuffers
+): [VectorBuffer, () => void] {
+  const bufferSetting: BufferSetting = {
+    name,
+    vectorAmount: 2 + pointsPerDirection * 3,
     vectorSize: 3,
-    numberOfVectors: 2 + pointsPerDirection * 3,
+    vectorType: "POINTS",
   };
 
+  const vectorBuffer = buffers.addBuffer(bufferSetting);
+  if (!vectorBuffer) {
+    throw new Error("Failed to allocate buffer " + name);
+  }
+
   const callback = () => {
+    const { buffer } = vectorBuffer;
     var nextVector = camera.eye;
 
-    vectorArray.buffer[0] = nextVector[0];
-    vectorArray.buffer[1] = nextVector[1];
-    vectorArray.buffer[2] = nextVector[2];
+    buffer[0] = nextVector[0];
+    buffer[1] = nextVector[1];
+    buffer[2] = nextVector[2];
 
     const { u, v, n } = camera.eyeCoordinate;
 
@@ -77,9 +93,9 @@ export function generateCamera(
           dir,
           distanceBetweenPoints * (i + 1)
         );
-        vectorArray.buffer[offset] = nextPoint[0];
-        vectorArray.buffer[offset + 1] = nextPoint[1];
-        vectorArray.buffer[offset + 2] = nextPoint[2];
+        buffer[offset] = nextPoint[0];
+        buffer[offset + 1] = nextPoint[1];
+        buffer[offset + 2] = nextPoint[2];
 
         offset = offset + 3;
       }
@@ -92,15 +108,15 @@ export function generateCamera(
       pointsPerDirection * distanceBetweenPoints
     );
 
-    vectorArray.buffer[offset] = lookingAt[0];
-    vectorArray.buffer[offset + 1] = lookingAt[1];
-    vectorArray.buffer[offset + 2] = lookingAt[2];
+    buffer[offset] = lookingAt[0];
+    buffer[offset + 1] = lookingAt[1];
+    buffer[offset + 2] = lookingAt[2];
   };
 
   clock.addEventListener("tick", callback);
 
   return [
-    vectorArray,
+    vectorBuffer,
     () => {
       clock.removeEventListener("tick", callback);
     },
