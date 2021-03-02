@@ -9,6 +9,7 @@ uniform float viewDistance;
 
 varying vec4 vertexPosition;
 varying float fadeValue;
+varying float fadeCloseByOverride;
 
 float fade(float pointDistance);
 float fadeCloseBy(float pointDistance);
@@ -22,25 +23,23 @@ void main() {
     pow(aVertexPosition.z - eye_position.z, 2.0)
   );
 
-  if (pointDistance >= 0.2) {
-    fadeValue = fade(pointDistance);
-  } else {
-    fadeValue = fadeCloseBy(pointDistance);
-  }
+  fadeCloseByOverride = fadeCloseBy(pointDistance);
+  fadeValue = max(fade(pointDistance), fadeCloseByOverride);
 
-  gl_PointSize = fadeValue * pointSize * fadePointSize(pointDistance);
+  gl_PointSize = pointSize * fadePointSize(pointDistance);
 
   vertexPosition = aVertexPosition;
 }
 
 float fade(float pointDistance) {
-  return 1.0 / (1.0 + exp(viewDistance * (pointDistance - viewDistance)));
+  return 1.0 / (1.0 + exp(2.0 * (pointDistance - viewDistance)));
 }
 
 float fadeCloseBy(float pointDistance) {
-  return 1.0 / (1.0 + exp(-100.0 * (pointDistance - 0.075)));
+  return 1.0 - (1.0 / (1.0 + exp(-10.0 * (pointDistance - 0.6))));
 }
 
 float fadePointSize(float pointDistance) {
-  return 1.0 + (1.0 / (1.0 + exp(2.0 * (pointDistance - 2.5))));
+  return 2.0 / pointDistance;
+  // return (1.0 + (1.0 / (1.0 + exp(2.0 * (pointDistance - 2.5))))) * 3.0;
 }

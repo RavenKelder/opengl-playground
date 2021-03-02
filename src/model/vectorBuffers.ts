@@ -64,4 +64,4 @@ export interface VectorBuffer {
   buffer: Float32Array;
 }
 
-export type VectorType = "POINTS" | "LINES";
+export type VectorType = "POINTS" | "LINES" | "TRIANGLES";

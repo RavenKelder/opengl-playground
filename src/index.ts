@@ -6,12 +6,18 @@ import { Movement } from "./controller/movement";
 import { generatorClock, physicsClock, renderClock } from "./controller/clock";
 import { EngineController } from "./controller/engine";
 import {
+  AizawaAttractor,
   BedheadAttractor,
   CameraVector,
   CoordinatesVector,
   CyclicSymmetricAttractor,
+  DadrasAttractor,
   Grid,
+  HalvorsenAttractor,
   LorenzAttractor,
+  MergedVectors,
+  SprottAttractor,
+  ThreeScrollAttractor,
 } from "./model/vectors";
 import { VectorBuffers } from "./model/vectorBuffers";
 
@@ -49,13 +55,52 @@ function main() {
     });
 
     // Get the array which will contain the points to render
+    let dadrasGenerator = new VectorGenerator(
+      "drs",
+      new DadrasAttractor(),
+      buffers,
+      generatorClock,
+      {
+        vectorAmount: 100000,
+        vectorSize: 3,
+        vectorType: "POINTS",
+      },
+      1000
+    );
+
+    let halGenerator = new VectorGenerator(
+      "hal",
+      new HalvorsenAttractor(),
+      buffers,
+      generatorClock,
+      {
+        vectorAmount: 100000,
+        vectorSize: 3,
+        vectorType: "POINTS",
+      },
+      1000
+    );
+
+    let tsGenerator = new VectorGenerator(
+      "tscr",
+      new ThreeScrollAttractor(),
+      buffers,
+      generatorClock,
+      {
+        vectorAmount: 100000,
+        vectorSize: 3,
+        vectorType: "POINTS",
+      },
+      1000
+    );
+
     let csaGenerator = new VectorGenerator(
       "csa",
       new CyclicSymmetricAttractor(),
       buffers,
       generatorClock,
       {
-        vectorAmount: 100000,
+        vectorAmount: 300000,
         vectorSize: 3,
         vectorType: "POINTS",
       },
@@ -88,13 +133,39 @@ function main() {
       1000
     );
 
-    let cubeGenerator = new VectorGenerator(
-      "cube",
-      new Grid(50, 5),
+    let aizawaGenerator = new VectorGenerator(
+      "aizawa",
+      new AizawaAttractor(),
       buffers,
       generatorClock,
-      { vectorAmount: 250000, vectorSize: 3, vectorType: "POINTS" },
+      {
+        vectorAmount: 300000,
+        vectorSize: 3,
+        vectorType: "POINTS",
+      },
       1000
+    );
+
+    let sprottGenerator = new VectorGenerator(
+      "sprott",
+      new SprottAttractor(),
+      buffers,
+      generatorClock,
+      {
+        vectorAmount: 300000,
+        vectorSize: 3,
+        vectorType: "POINTS",
+      },
+      1000
+    );
+
+    let cubeGenerator = new VectorGenerator(
+      "cube",
+      new Grid(100, 5),
+      buffers,
+      generatorClock,
+      { vectorAmount: 1100000, vectorSize: 3, vectorType: "POINTS" },
+      3000
     );
 
     let camGenerator = new VectorGenerator(
@@ -105,6 +176,11 @@ function main() {
       { vectorAmount: 1000, vectorSize: 3, vectorType: "POINTS" },
       1000
     );
+
+    setInterval(() => {
+      const { a, b, c, d, e, f } = aizawaGenerator.generator as AizawaAttractor;
+      console.log({ a, b, c, d, e, f });
+    }, 1000);
 
     let worldGenerator = new VectorGenerator(
       "world",
@@ -157,6 +233,56 @@ function main() {
           console.log("Failed to attach lrza");
         } else {
           console.log("Attached lrza");
+        }
+      });
+
+    document
+      .getElementById("sprott-attractor")
+      ?.addEventListener("click", () => {
+        if (!swapGenerator(buffers, sprottGenerator)) {
+          console.log("Failed to attach sprott");
+        } else {
+          console.log("Attached sprott");
+        }
+      });
+
+    document
+      .getElementById("aizawa-attractor")
+      ?.addEventListener("click", () => {
+        if (!swapGenerator(buffers, aizawaGenerator)) {
+          console.log("Failed to attach aizawa");
+        } else {
+          console.log("Attached aizawa");
+        }
+      });
+
+    document
+      .getElementById("halvorsen-attractor")
+      ?.addEventListener("click", () => {
+        if (!swapGenerator(buffers, halGenerator)) {
+          console.log("Failed to attach halv");
+        } else {
+          console.log("Attached halv");
+        }
+      });
+
+    document
+      .getElementById("threescroll-attractor")
+      ?.addEventListener("click", () => {
+        if (!swapGenerator(buffers, tsGenerator)) {
+          console.log("Failed to attach tscr");
+        } else {
+          console.log("Attached tscr");
+        }
+      });
+
+    document
+      .getElementById("dadras-attractor")
+      ?.addEventListener("click", () => {
+        if (!swapGenerator(buffers, dadrasGenerator)) {
+          console.log("Failed to attach dadras");
+        } else {
+          console.log("Attached dadras");
         }
       });
 

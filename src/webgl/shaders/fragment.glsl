@@ -6,6 +6,7 @@ uniform vec3 eye_position;
 
 varying vec4 vertexPosition;
 varying float fadeValue;
+varying float fadeCloseByOverride;
 
 float redOffset = 0.0;
 float greenOffset = (2.0 / 3.0) * M_PI;
@@ -18,9 +19,9 @@ void main() {
   float blueVal = sin(normalised + blueOffset) / 2.0 + 0.5;
 
   gl_FragColor = vec4(
-    redVal * fadeValue, 
-    greenVal * fadeValue, 
-    blueVal * fadeValue, 
-    1.0
+    (1.0 - redVal * (1.0 - 0.5 * fadeCloseByOverride)) * fadeValue, 
+    (1.0 - greenVal * (1.0 - 0.5 * fadeCloseByOverride)) * fadeValue, 
+    (1.0 - blueVal * (1.0 - 0.5 * fadeCloseByOverride)) * fadeValue, 
+    1
   );
 }

@@ -205,7 +205,7 @@ export class Display {
       attrLocations,
       uniformLocations,
     } = this;
-    context.clearColor(0.0, 0.0, 0.0, 1.0);
+    context.clearColor(0, 0, 0, 1.0);
     context.clearDepth(1.0);
     context.enable(context.DEPTH_TEST);
     context.depthFunc(context.LEQUAL);
@@ -243,7 +243,7 @@ export class Display {
 
     context.uniform1f(uniformLocations.pointSize, vertexSize);
 
-    context.uniform1f(uniformLocations.viewDistance, 5);
+    context.uniform1f(uniformLocations.viewDistance, 2);
 
     context.uniform3f(
       uniformLocations.eyePosition,
