@@ -8,6 +8,7 @@ export class EngineController {
     element.addEventListener("keydown", (event) => {
       switch (event.key) {
         case "p":
+          console.log("toggle engine");
           this.toggleClocks();
           break;
       }

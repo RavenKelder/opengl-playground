@@ -7,6 +7,7 @@ export class VectorBuffers {
 
     bufferSizes.forEach(({ name, vectorAmount, vectorSize, vectorType }) => {
       this.buffers.set(name, {
+        name,
         vectorAmount,
         vectorSize,
         vectorType,
@@ -28,6 +29,7 @@ export class VectorBuffers {
     }
 
     const newBuffer: VectorBuffer = {
+      name,
       vectorSize,
       vectorType,
       vectorAmount,
@@ -52,13 +54,14 @@ export class VectorBuffers {
   }
 }
 
-export type BufferSetting = Omit<VectorBuffer, "buffer"> & { name: string };
+export type BufferSetting = Omit<VectorBuffer, "buffer">;
 
 export interface VectorBuffer {
+  name: string;
   vectorSize: number;
   vectorAmount: number;
   vectorType: VectorType;
   buffer: Float32Array;
 }
 
-export type VectorType = "POINTS";
+export type VectorType = "POINTS" | "LINES";

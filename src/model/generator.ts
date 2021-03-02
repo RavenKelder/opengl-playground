@@ -1,124 +1,77 @@
-import { vec3 } from "gl-matrix";
 import { Clock } from "../controller/clock";
-import { Camera } from "../webgl/camera";
 import { BufferSetting, VectorBuffer, VectorBuffers } from "./vectorBuffers";
 import { Vector } from "./vectors";
 
-export function generate(
-  name: string,
-  clock: Clock,
-  vectorsPerBuffer: number,
-  valuesPerIteration: number = 1000,
-  vector: Vector,
-  buffers: VectorBuffers
-): [VectorBuffer, () => void] {
-  const bufferSetting: BufferSetting = {
-    name,
-    vectorAmount: vectorsPerBuffer,
-    vectorSize: 3,
-    vectorType: "POINTS",
-  };
+export class VectorGenerator {
+  name: string;
+  generator: Vector;
+  buffers: VectorBuffers;
+  vectorBuffer: VectorBuffer;
+  clock: Clock;
+  vectorsPerIteration: number;
+  bufferIndex: number;
+  totalGeneratedValues: number;
+  working: boolean = false;
+  onTick: () => void;
+  isEnabled: boolean = false;
 
-  const vectorBuffer = buffers.addBuffer(bufferSetting);
+  constructor(
+    name: string,
+    vector: Vector,
+    vectorBuffers: VectorBuffers,
+    clock: Clock,
+    bufferSetting: Omit<BufferSetting, "name">,
+    vectorsPerIteration: number
+  ) {
+    this.name = name;
+    this.generator = vector;
+    this.buffers = vectorBuffers;
+    this.clock = clock;
+    this.vectorsPerIteration = vectorsPerIteration;
+    this.bufferIndex = 0;
+    this.totalGeneratedValues = 0;
 
-  if (!vectorBuffer) {
-    throw new Error("Failed to allocate buffer " + name);
-  }
-  var index = 0;
-
-  var generatedValues = 0;
-
-  const callback = () => {
-    const { vectorAmount, vectorSize, buffer } = vectorBuffer;
-    for (let i = 0; i < valuesPerIteration; i++) {
-      index = index % vectorAmount;
-      var nextVector = vector.coordinate();
-
-      buffer[index * vectorSize] = nextVector[0];
-      buffer[index * vectorSize + 1] = nextVector[1];
-      buffer[index * vectorSize + 2] = nextVector[2];
-
-      index++;
+    const newVectorBuffer = this.buffers.addBuffer({ name, ...bufferSetting });
+    if (newVectorBuffer) {
+      this.vectorBuffer = newVectorBuffer;
+    } else {
+      throw new Error("Failed to allocate buffer " + name);
     }
 
-    generatedValues = generatedValues + valuesPerIteration * vectorSize;
-  };
+    const onTick = () => {
+      const { vectorAmount, vectorSize, buffer } = newVectorBuffer;
+      for (let i = 0; i < vectorsPerIteration; i++) {
+        this.bufferIndex = this.bufferIndex % vectorAmount;
+        var nextVector = vector.coordinate();
 
-  clock.addEventListener("tick", callback);
+        buffer[this.bufferIndex * vectorSize] = nextVector[0];
+        buffer[this.bufferIndex * vectorSize + 1] = nextVector[1];
+        buffer[this.bufferIndex * vectorSize + 2] = nextVector[2];
 
-  return [
-    vectorBuffer,
-    () => {
-      clock.removeEventListener("tick", callback);
-    },
-  ];
-}
+        this.bufferIndex = this.bufferIndex + 1;
+      }
+    };
 
-export function generateCamera(
-  name: string,
-  clock: Clock,
-  camera: Camera,
-  pointsPerDirection: number,
-  distanceBetweenPoints: number,
-  buffers: VectorBuffers
-): [VectorBuffer, () => void] {
-  const bufferSetting: BufferSetting = {
-    name,
-    vectorAmount: 2 + pointsPerDirection * 3,
-    vectorSize: 3,
-    vectorType: "POINTS",
-  };
-
-  const vectorBuffer = buffers.addBuffer(bufferSetting);
-  if (!vectorBuffer) {
-    throw new Error("Failed to allocate buffer " + name);
+    this.onTick = onTick;
   }
 
-  const callback = () => {
-    const { buffer } = vectorBuffer;
-    var nextVector = camera.eye;
+  attach(): boolean {
+    if (this.isEnabled) {
+      return false;
+    }
 
-    buffer[0] = nextVector[0];
-    buffer[1] = nextVector[1];
-    buffer[2] = nextVector[2];
+    this.clock.addEventListener("tick", this.onTick);
+    this.isEnabled = true;
+    return true;
+  }
 
-    const { u, v, n } = camera.eyeCoordinate;
+  detach() {
+    if (!this.isEnabled) {
+      return false;
+    }
 
-    var offset = 3;
-    [u, v, n].forEach((dir) => {
-      for (let i = 0; i < pointsPerDirection; i++) {
-        let nextPoint = vec3.scaleAndAdd(
-          vec3.create(),
-          camera.eye,
-          dir,
-          distanceBetweenPoints * (i + 1)
-        );
-        buffer[offset] = nextPoint[0];
-        buffer[offset + 1] = nextPoint[1];
-        buffer[offset + 2] = nextPoint[2];
-
-        offset = offset + 3;
-      }
-    });
-
-    const lookingAt = vec3.scaleAndAdd(
-      vec3.create(),
-      camera.eye,
-      camera.lookingAt,
-      pointsPerDirection * distanceBetweenPoints
-    );
-
-    buffer[offset] = lookingAt[0];
-    buffer[offset + 1] = lookingAt[1];
-    buffer[offset + 2] = lookingAt[2];
-  };
-
-  clock.addEventListener("tick", callback);
-
-  return [
-    vectorBuffer,
-    () => {
-      clock.removeEventListener("tick", callback);
-    },
-  ];
+    this.clock.removeEventListener("tick", this.onTick);
+    this.isEnabled = false;
+    return true;
+  }
 }

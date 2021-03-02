@@ -11,7 +11,11 @@ export class ClockEvent extends Event {
 export class Clock extends EventTarget {
   ticksPerSecond: number;
   enabled: boolean;
-  lastTick: Date;
+  lastTick: number;
+  lastTickTime: number;
+  ticksSinceLastTickTime: number = 0;
+  realTicksPerSecond: number = 0;
+  lastDelay: number = 0;
   delay: number;
 
   constructor(ticksPerSecond: number) {
@@ -19,7 +23,18 @@ export class Clock extends EventTarget {
     this.ticksPerSecond = ticksPerSecond;
     this.enabled = false;
     this.delay = 1000 / ticksPerSecond;
-    this.lastTick = new Date();
+    this.lastTick = performance.now();
+    this.lastTickTime = performance.now();
+  }
+
+  updateTicksPerSecond(value: number): boolean {
+    if (value <= 0 || value > 1000) {
+      return false;
+    }
+
+    this.delay = 1000 / value;
+    this.ticksPerSecond = value;
+    return true;
   }
 
   start(): boolean {
@@ -31,16 +46,23 @@ export class Clock extends EventTarget {
 
     (async () => {
       while (this.enabled) {
-        const now = new Date();
-        const difference = now.getTime() - this.lastTick.getTime();
+        const now = performance.now();
+        this.lastDelay = now - this.lastTick;
         this.lastTick = now;
-        const tick = new ClockEvent("tick", difference);
+        const tick = new ClockEvent("tick", this.lastDelay);
         this.dispatchEvent(tick);
+        this.ticksSinceLastTickTime = this.ticksSinceLastTickTime + 1;
 
-        if (difference < this.delay) {
-          await new Promise((res) => setTimeout(res, this.delay - difference));
+        if (now - this.lastTickTime >= 1000) {
+          this.lastTickTime = now;
+          this.realTicksPerSecond = this.ticksSinceLastTickTime;
+          this.ticksSinceLastTickTime = 0;
+        }
+
+        if (this.lastDelay < this.delay) {
+          await new Promise((res) => setTimeout(res, this.delay));
         } else {
-          await new Promise((res) => setTimeout(res, 1));
+          await new Promise((res) => setTimeout(res, 4));
         }
       }
     })();
@@ -53,7 +75,7 @@ export class Clock extends EventTarget {
   }
 }
 
-const physicsClock = new Clock(60);
+const physicsClock = new Clock(50);
 const renderClock = new Clock(60);
 const generatorClock = new Clock(100);
 

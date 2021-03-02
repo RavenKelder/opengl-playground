@@ -14,7 +14,8 @@ export class Renderer {
   contextBuffer: WebGLBuffer;
   frameCounter: number = 0;
   lastFPS: number = 0;
-  lastFPSTime: Date;
+  lastFPSTime: number;
+  rendering: boolean = false;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -55,12 +56,18 @@ export class Renderer {
 
     this.buffers = buffers;
 
-    this.lastFPSTime = new Date();
+    this.lastFPSTime = performance.now();
 
     clock.addEventListener("tick", () => {
+      if (this.rendering) {
+        return;
+      }
+
+      this.rendering = true;
       const { context, display, buffers } = this;
       const activeBuffer = buffers.getCurrentBuffer();
       if (!activeBuffer) {
+        this.rendering = false;
         return;
       }
 
@@ -72,11 +79,15 @@ export class Renderer {
 
       this.frameCounter++;
 
-      if (new Date().getTime() - this.lastFPSTime.getTime() >= 1000) {
+      const now = performance.now();
+
+      if (now - this.lastFPSTime >= 1000) {
         this.lastFPS = this.frameCounter;
         this.frameCounter = 0;
-        this.lastFPSTime = new Date();
+        this.lastFPSTime = now;
       }
+
+      this.rendering = false;
     });
   }
 }

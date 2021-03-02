@@ -1,3 +1,6 @@
+import { vec3 } from "gl-matrix";
+import { Camera } from "../webgl/camera";
+
 export abstract class Vector {
   abstract coordinate(): [number, number, number];
 }
@@ -167,5 +170,144 @@ export class MergedVectors extends Vector {
     this.counter++;
 
     return vectors[index].coordinate();
+  }
+}
+
+export class CameraVector extends Vector {
+  camera: Camera;
+  scale: number;
+  index: number;
+  pointsPerDirection: number;
+  maxIndex: number;
+
+  constructor(camera: Camera, scale = 5, pointsPerDirection = 300) {
+    super();
+    this.camera = camera;
+    this.scale = scale;
+    this.index = 0;
+    this.pointsPerDirection = pointsPerDirection;
+    this.maxIndex = pointsPerDirection * 3 + 2;
+  }
+
+  coordinate(): [number, number, number] {
+    const { camera, scale, index, pointsPerDirection, maxIndex } = this;
+    var result: vec3 = vec3.create();
+    if (index === maxIndex - 2) {
+      vec3.set(result, camera.eye[0], camera.eye[1], camera.eye[2]);
+    } else if (index === maxIndex - 1) {
+      vec3.set(
+        result,
+        camera.lookingAt[0],
+        camera.lookingAt[1],
+        camera.lookingAt[2]
+      );
+      vec3.sub(result, camera.eye, result);
+    } else {
+      const dir = Math.floor(index / pointsPerDirection);
+      switch (dir) {
+        case 0:
+          vec3.set(
+            result,
+            camera.eyeCoordinate["u"][0],
+            camera.eyeCoordinate["u"][1],
+            camera.eyeCoordinate["u"][2]
+          );
+          break;
+        case 1:
+          vec3.set(
+            result,
+            camera.eyeCoordinate["v"][0],
+            camera.eyeCoordinate["v"][1],
+            camera.eyeCoordinate["v"][2]
+          );
+          break;
+        case 2:
+          vec3.set(
+            result,
+            camera.eyeCoordinate["n"][0],
+            camera.eyeCoordinate["n"][1],
+            camera.eyeCoordinate["n"][2]
+          );
+          break;
+        default:
+          result = [0, 0, 0];
+          console.log("Warning: Invalid direction vector");
+      }
+      vec3.scale(
+        result,
+        result,
+        (scale * (index % pointsPerDirection)) / pointsPerDirection
+      );
+      vec3.add(result, result, camera.eye);
+    }
+
+    this.index = this.index + 1;
+    if (this.index >= maxIndex) {
+      this.index = 0;
+    }
+
+    return [result[0], result[1], result[2]];
+  }
+}
+
+export class CoordinatesVector extends Vector {
+  camera: Camera;
+  scale: number;
+  index: number;
+  maxIndex: number = 8;
+
+  constructor(camera: Camera, scale = 0.2) {
+    super();
+    this.camera = camera;
+    this.scale = scale;
+    this.index = 0;
+  }
+
+  coordinate(): [number, number, number] {
+    const { camera, scale, index, maxIndex } = this;
+    var result: vec3 = vec3.create();
+    switch (index) {
+      case 0:
+      case 2:
+      case 4:
+      case 6:
+        vec3.set(result, camera.eye[0], camera.eye[1], camera.eye[2]);
+        break;
+      case 1:
+        vec3.set(result, 0, 0, 1);
+        vec3.scale(result, result, scale);
+        vec3.add(result, result, camera.eye);
+        break;
+      case 3:
+        vec3.set(result, 0, 1, 0);
+        vec3.scale(result, result, scale);
+        vec3.add(result, result, camera.eye);
+        break;
+      case 5:
+        vec3.set(result, 1, 0, 0);
+        vec3.scale(result, result, scale);
+        vec3.add(result, result, camera.eye);
+        break;
+      case 7:
+        vec3.set(
+          result,
+          camera.lookingAt[0],
+          camera.lookingAt[1],
+          camera.lookingAt[2]
+        );
+        vec3.scale(result, result, scale);
+        vec3.sub(result, camera.eye, result);
+    }
+
+    vec3.scaleAndAdd(result, result, camera.eyeCoordinate["n"], 0.1);
+    vec3.scaleAndAdd(result, result, camera.eyeCoordinate["u"], -0.02);
+    vec3.scaleAndAdd(result, result, camera.eyeCoordinate["v"], -0.02);
+
+    this.index = this.index + 1;
+    if (this.index >= maxIndex) {
+      this.index = 0;
+    }
+
+    return [result[0], result[1], result[2]];
   }
 }

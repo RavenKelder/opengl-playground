@@ -3,11 +3,31 @@ body {
   font-family: sans-serif;
 }
 
-canvas#glCanvas {
-  margin: auto;
+span#canvasContainer {
+  display: flex;
+  flex-direction: row;
 }
 
 div#menu {
   height: 20px;
   width: 100%;
+}
+
+div#menu button {
+  width: 100%;
+}
+
+div.metrics-div {
+  display: flex;
+  flex-direction: row;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+div.padding-div {
+  flex-grow: 1;
+}
+
+p.metrics-display {
+  min-width: 40px;
 }

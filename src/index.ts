@@ -1,12 +1,14 @@
 import { Renderer } from "./webgl/render";
 import config from "./config";
-import { generate, generateCamera } from "./model/generator";
+import { VectorGenerator } from "./model/generator";
 import { Camera } from "./webgl/camera";
 import { Movement } from "./controller/movement";
 import { generatorClock, physicsClock, renderClock } from "./controller/clock";
 import { EngineController } from "./controller/engine";
 import {
   BedheadAttractor,
+  CameraVector,
+  CoordinatesVector,
   CyclicSymmetricAttractor,
   Grid,
   LorenzAttractor,
@@ -14,7 +16,22 @@ import {
 import { VectorBuffers } from "./model/vectorBuffers";
 
 const { page } = config;
-let stopCurrentGenerator: () => void = () => {};
+let activeGenerator: VectorGenerator;
+
+function swapGenerator(
+  buffers: VectorBuffers,
+  generator: VectorGenerator
+): boolean {
+  if (activeGenerator) {
+    console.log("Detaching " + activeGenerator.name);
+    activeGenerator.detach();
+  }
+
+  console.log("Attaching " + generator.name);
+  generator.attach();
+  activeGenerator = generator;
+  return buffers.setActiveBuffer(generator.name);
+}
 
 /** Quite a hot mess at the moment; this function currently links the controller,
  * model and view together */
@@ -32,19 +49,71 @@ function main() {
     });
 
     // Get the array which will contain the points to render
-    let [, stopGenerator1] = generate(
+    let csaGenerator = new VectorGenerator(
       "csa",
-      generatorClock,
-      100000,
-      1000,
       new CyclicSymmetricAttractor(),
-      buffers
+      buffers,
+      generatorClock,
+      {
+        vectorAmount: 100000,
+        vectorSize: 3,
+        vectorType: "POINTS",
+      },
+      1000
     );
-    stopCurrentGenerator = stopGenerator1;
 
-    if (!buffers.setActiveBuffer("csa")) {
-      console.log("Failed to activate buffer");
-    }
+    let bhGenerator = new VectorGenerator(
+      "bha",
+      new BedheadAttractor(),
+      buffers,
+      generatorClock,
+      {
+        vectorAmount: 100000,
+        vectorSize: 3,
+        vectorType: "POINTS",
+      },
+      1000
+    );
+
+    let lrzaGenerator = new VectorGenerator(
+      "lrza",
+      new LorenzAttractor(),
+      buffers,
+      generatorClock,
+      {
+        vectorAmount: 100000,
+        vectorSize: 3,
+        vectorType: "POINTS",
+      },
+      1000
+    );
+
+    let cubeGenerator = new VectorGenerator(
+      "cube",
+      new Grid(50, 5),
+      buffers,
+      generatorClock,
+      { vectorAmount: 250000, vectorSize: 3, vectorType: "POINTS" },
+      1000
+    );
+
+    let camGenerator = new VectorGenerator(
+      "cam",
+      new CameraVector(camera),
+      buffers,
+      generatorClock,
+      { vectorAmount: 1000, vectorSize: 3, vectorType: "POINTS" },
+      1000
+    );
+
+    let worldGenerator = new VectorGenerator(
+      "world",
+      new CoordinatesVector(camera),
+      buffers,
+      generatorClock,
+      { vectorAmount: 8, vectorSize: 3, vectorType: "LINES" },
+      8
+    );
 
     // engineController binds the "p" key to pause the vectorArray generation
     new EngineController(canvasContainer, [generatorClock]);
@@ -60,7 +129,7 @@ function main() {
     // ratio when the browser window resizes.
     // TODO: Assign the resizing into class methods rather than out here
     const onResize = () => {
-      const width = window.innerWidth - 50;
+      const width = window.innerWidth - 200;
       const height = window.innerHeight - 50;
       canvas.style.width = `${width.toString()}px`;
       canvas.style.height = `${height.toString()}px`;
@@ -81,79 +150,83 @@ function main() {
       onResize();
     };
 
-    // document
-    //   .getElementById("cam-coord-button")
-    //   ?.addEventListener("click", () => {
-    //     stopCurrentGenerator();
-    //     const [vArray, stopGenerator] = generateCamera(
-    //       generatorClock,
-    //       camera,
-    //       10000,
-    //       0.0002
-    //     );
-    //     stopCurrentGenerator = stopGenerator;
-    //     vectorBuffer.numberOfVectors = vArray.numberOfVectors;
-    //     vectorBuffer.buffer = vArray.buffer;
-    //     vectorBuffer.vectorSize = vArray.vectorSize;
-    //   });
-    // document
-    //   .getElementById("lorenz-attractor")
-    //   ?.addEventListener("click", () => {
-    //     stopCurrentGenerator();
-    //     const [vArray, stopGenerator] = generate(
-    //       generatorClock,
-    //       100000,
-    //       1000,
-    //       new LorenzAttractor()
-    //     );
-    //     stopCurrentGenerator = stopGenerator;
-    //     vectorBuffer.numberOfVectors = vArray.numberOfVectors;
-    //     vectorBuffer.buffer = vArray.buffer;
-    //     vectorBuffer.vectorSize = vArray.vectorSize;
-    //   });
-    // document
-    //   .getElementById("bedhead-attractor")
-    //   ?.addEventListener("click", () => {
-    //     stopCurrentGenerator();
-    //     const [vArray, stopGenerator] = generate(
-    //       generatorClock,
-    //       100000,
-    //       1000,
-    //       new BedheadAttractor()
-    //     );
-    //     stopCurrentGenerator = stopGenerator;
-    //     vectorBuffer.numberOfVectors = vArray.numberOfVectors;
-    //     vectorBuffer.buffer = vArray.buffer;
-    //     vectorBuffer.vectorSize = vArray.vectorSize;
-    //   });
-    // document.getElementById("cube-grid")?.addEventListener("click", () => {
-    //   stopCurrentGenerator();
-    //   const [vArray, stopGenerator] = generate(
-    //     generatorClock,
-    //     200000,
-    //     1000,
-    //     new Grid(50, 10)
-    //   );
-    // stopCurrentGenerator = stopGenerator;
-    // vectorBuffer.numberOfVectors = vArray.numberOfVectors;
-    // vectorBuffer.buffer = vArray.buffer;
-    // vectorBuffer.vectorSize = vArray.vectorSize;
-    // });
-    // document
-    //   .getElementById("cyclic-attractor")
-    //   ?.addEventListener("click", () => {
-    //     stopCurrentGenerator();
-    //     const [vArray, stopGenerator] = generate(
-    //       generatorClock,
-    //       100000,
-    //       1000,
-    //       new CyclicSymmetricAttractor()
-    //     );
-    //     stopCurrentGenerator = stopGenerator;
-    //     vectorBuffer.numberOfVectors = vArray.numberOfVectors;
-    //     vectorBuffer.buffer = vArray.buffer;
-    //     vectorBuffer.vectorSize = vArray.vectorSize;
-    //   });
+    document
+      .getElementById("lorenz-attractor")
+      ?.addEventListener("click", () => {
+        if (!swapGenerator(buffers, lrzaGenerator)) {
+          console.log("Failed to attach lrza");
+        } else {
+          console.log("Attached lrza");
+        }
+      });
+
+    document
+      .getElementById("cam-coord-button")
+      ?.addEventListener("click", () => {
+        if (!swapGenerator(buffers, camGenerator)) {
+          console.log("Failed to attach cam");
+        } else {
+          console.log("Attached cam");
+        }
+      });
+
+    document.getElementById("cube-grid")?.addEventListener("click", () => {
+      if (!swapGenerator(buffers, cubeGenerator)) {
+        console.log("Failed to attach cube");
+      } else {
+        console.log("Attached cube");
+      }
+    });
+
+    document
+      .getElementById("bedhead-attractor")
+      ?.addEventListener("click", () => {
+        if (!swapGenerator(buffers, bhGenerator)) {
+          console.log("Failed to attach bh");
+        } else {
+          console.log("Attached bh");
+        }
+      });
+
+    document
+      .getElementById("cyclic-attractor")
+      ?.addEventListener("click", () => {
+        if (!swapGenerator(buffers, csaGenerator)) {
+          console.log("Failed to attach csa");
+        } else {
+          console.log("Attached csa");
+        }
+      });
+
+    document
+      .getElementById("world-coord-button")
+      ?.addEventListener("click", () => {
+        if (!swapGenerator(buffers, worldGenerator)) {
+          console.log("Failed to attach world");
+        } else {
+          console.log("Attached world");
+        }
+      });
+
+    const fpsDisplay = document.getElementById("fps-display-p");
+    const ftDisplay = document.getElementById("frametime-display-p");
+    const cdDisplay = document.getElementById("clocktime-display-p");
+
+    setInterval(() => {
+      if (fpsDisplay) {
+        fpsDisplay.innerText = renderer.lastFPS.toString();
+      }
+      if (ftDisplay) {
+        if (renderer.lastFPS != 0) {
+          ftDisplay.innerText = (1000 / renderer.lastFPS).toFixed(2);
+        }
+      }
+      if (cdDisplay) {
+        cdDisplay.innerText = (1000 / renderClock.realTicksPerSecond).toFixed(
+          2
+        );
+      }
+    }, 1000);
   } else {
     alert("Cannot find canvas.");
   }
